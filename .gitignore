@@ -1,0 +1,42 @@
+# Operating System Files
+
+*.DS_Store
+Thumbs.db
+*.sw?
+.#*
+*#
+*~
+*.sublime-*
+
+# Build Artifacts
+
+.git*
+.gradle/
+build/
+target/
+bin/
+out/
+dependency-reduced-pom.xml
+
+# Eclipse Project Files
+
+.classpath
+.project
+.settings/
+
+# IntelliJ IDEA Files
+
+*.iml
+*.ipr
+*.iws
+*.idea
+*.log
+
+README.html
+
+# HTML resourse Files
+#src/main/resources/static/index.html
+#src/main/resources/static/view/
+
+# temp ignore
+src/main/resources/swagger.yaml
