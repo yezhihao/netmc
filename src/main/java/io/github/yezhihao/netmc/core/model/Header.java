@@ -7,10 +7,13 @@ import java.io.Serializable;
  * @author yezhihao
  * home https://gitee.com/yezhihao/jt808-server
  */
-public interface Header<T> extends Serializable {
+public interface Header<ClientID, Type> extends Serializable {
 
     /** 客户端唯一标识 */
-    T getClientId();
+    ClientID getClientId();
+
+    /** 消息类型 */
+    Type getType();
 
     /** 消息流水号 */
     int getSerialNo();

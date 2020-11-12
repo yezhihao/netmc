@@ -2,8 +2,8 @@ package io.github.yezhihao.netmc.core.handler;
 
 import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.session.Session;
+import io.github.yezhihao.netmc.util.BasicThreadFactory;
 import io.github.yezhihao.netmc.util.VirtualList;
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +51,7 @@ public class AsyncBatchHandler extends Handler {
 
         this.queue = new ConcurrentLinkedQueue();
         this.executor = new ThreadPoolExecutor(this.poolSize, this.poolSize, 1000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(400),
-                new BasicThreadFactory.Builder().namingPattern(actionMethod.getName() + "-pool-%d").build());
+                new BasicThreadFactory.Builder().daemon(true).namingPattern(actionMethod.getName() + "-pool-%d").build());
 
         for (int i = 0; i < poolSize; i++) {
             boolean master = i == 0;
