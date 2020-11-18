@@ -1,10 +1,10 @@
 package io.github.yezhihao.netmc.session;
 
+import io.github.yezhihao.netmc.core.model.Header;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.github.yezhihao.netmc.core.model.Header;
 
 import java.util.Collection;
 import java.util.Map;
@@ -76,6 +76,17 @@ public class Session {
 
     public void register(Header header, Object subject) {
         this.clientId = header.getClientId();
+        this.registered = true;
+        this.subject = subject;
+        sessionManager.put(clientId, this);
+    }
+
+    public void register(Object clientId) {
+        this.register(clientId, null);
+    }
+
+    public void register(Object clientId, Object subject) {
+        this.clientId = clientId;
         this.registered = true;
         this.subject = subject;
         sessionManager.put(clientId, this);
