@@ -12,13 +12,13 @@ import java.lang.annotation.*;
 @Documented
 public @interface AsyncBatch {
 
-    //线程数量
+    /** 线程数量 */
     int poolSize() default 2;
 
-    //最大累计消息数
-    int maxElements() default 400;
+    /** 最大累计消息数 */
+    int maxElements() default 4000;
 
-    //最大等待时间
+    /** 最大等待时间 */
     int maxWait() default 1000;
 
 }
