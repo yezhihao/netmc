@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.yezhihao</groupId>
     <artifactId>netmc</artifactId>
-    <version>1.0.2.RELEASE</version>
+    <version>1.0.3.RELEASE</version>
     <packaging>jar</packaging>
 
     <name>Netmc</name>
