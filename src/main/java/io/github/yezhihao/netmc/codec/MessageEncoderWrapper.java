@@ -31,7 +31,10 @@ public class MessageEncoderWrapper extends ChannelOutboundHandlerAdapter {
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
         ByteBuf buf = null;
         try {
-            buf = encoder.encode(msg);
+            if (msg instanceof ByteBuf)
+                buf = (ByteBuf) msg;
+            else
+                buf = encoder.encode(msg);
             if (log.isInfoEnabled())
                 log.info("<<<<<原始报文[ip={}],hex={}", ctx.channel().remoteAddress(), ByteBufUtil.hexDump(buf));
 
