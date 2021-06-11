@@ -100,6 +100,10 @@ public class Session {
         return attributes.keySet();
     }
 
+    public Map<Object, Object> getAttributes() {
+        return attributes;
+    }
+
     public Object getAttribute(Object name) {
         return attributes.get(name);
     }
