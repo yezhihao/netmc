@@ -1,6 +1,5 @@
 package io.github.yezhihao.netmc.core;
 
-import io.github.yezhihao.netmc.core.model.Header;
 import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.session.Session;
 
@@ -9,7 +8,7 @@ import io.github.yezhihao.netmc.session.Session;
  * @author yezhihao
  * home https://gitee.com/yezhihao/jt808-server
  */
-public interface HandlerInterceptor<T extends Message<? extends Header>> {
+public interface HandlerInterceptor<T extends Message> {
     /** 未找到对应的Handle */
     T notSupported(T request, Session session);
 

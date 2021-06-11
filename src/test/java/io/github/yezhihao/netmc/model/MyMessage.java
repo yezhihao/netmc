@@ -3,7 +3,7 @@ package io.github.yezhihao.netmc.model;
 import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.session.Session;
 
-public class MyMessage implements Message<MyHeader> {
+public class MyMessage implements Message {
 
     private Session session;
 
@@ -19,7 +19,6 @@ public class MyMessage implements Message<MyHeader> {
         this.session = session;
     }
 
-    @Override
     public MyHeader getHeader() {
         return header;
     }
@@ -37,8 +36,18 @@ public class MyMessage implements Message<MyHeader> {
     }
 
     @Override
-    public Object getMessageType() {
+    public String getClientId() {
+        return header.getClientId();
+    }
+
+    @Override
+    public Integer getMessageId() {
         return header.getType();
+    }
+
+    @Override
+    public int getSerialNo() {
+        return header.getSerialNo();
     }
 
     @Override

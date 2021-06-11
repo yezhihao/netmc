@@ -7,6 +7,6 @@ package io.github.yezhihao.netmc.core.model;
 public interface Response {
 
     /** 应答消息流水号 */
-    int getSerialNo();
+    int getResponseSerialNo();
 
 }

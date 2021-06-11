@@ -7,9 +7,14 @@ import java.io.Serializable;
  * @author yezhihao
  * home https://gitee.com/yezhihao/jt808-server
  */
-public interface Message<T extends Header> extends Serializable {
+public interface Message extends Serializable {
 
-    T getHeader();
+    /** 客户端唯一标识 */
+    Serializable getClientId();
 
-    Object getMessageType();
+    /** 消息类型 */
+    Serializable getMessageId();
+
+    /** 消息流水号 */
+    int getSerialNo();
 }

@@ -1,6 +1,5 @@
 package io.github.yezhihao.netmc.core.handler;
 
-import io.github.yezhihao.netmc.core.model.Header;
 import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.session.Session;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
@@ -17,7 +16,6 @@ public abstract class Handler {
 
     public static final int MESSAGE = 0;
     public static final int SESSION = 1;
-    public static final int HEADER = 2;
 
     public final Object targetObject;
     public final Method targetMethod;
@@ -44,8 +42,6 @@ public abstract class Handler {
 
                 if (Message.class.isAssignableFrom(clazz))
                     parameterTypes[i] = MESSAGE;
-                else if (Header.class.isAssignableFrom(clazz))
-                    parameterTypes[i] = HEADER;
                 else if (Session.class.isAssignableFrom(clazz))
                     parameterTypes[i] = SESSION;
             }
@@ -66,9 +62,6 @@ public abstract class Handler {
                     break;
                 case Handler.SESSION:
                     args[i] = session;
-                    break;
-                case Handler.HEADER:
-                    args[i] = request.getHeader();
                     break;
             }
         }
