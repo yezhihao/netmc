@@ -1,14 +1,17 @@
 package io.github.yezhihao.netmc.session;
 
-import io.github.yezhihao.netmc.core.model.Header;
+import io.github.yezhihao.netmc.core.model.Message;
+import io.github.yezhihao.netmc.core.model.Response;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -29,24 +32,24 @@ public class Session {
 
     private final long creationTime;
     private volatile long lastAccessedTime;
-    private Map<String, Object> attributes;
-    private Object subject;
-    private Object snapshot;
+    private Map<Object, Object> attributes;
     private Integer protocolVersion;
 
     private SessionManager sessionManager;
 
     protected Session(Channel channel, SessionManager sessionManager) {
+        this(null, channel, sessionManager);
+    }
+
+    protected Session(Class<? extends Enum> sessionKeyClass, Channel channel, SessionManager sessionManager) {
         this.channel = channel;
         this.sessionManager = sessionManager;
         this.creationTime = System.currentTimeMillis();
         this.lastAccessedTime = creationTime;
-        this.attributes = new TreeMap<>();
-    }
-
-    public void writeObject(Object message) {
-        log.info("<<<<<<<<<<消息下发{},{}", this, message);
-        channel.writeAndFlush(message);
+        if (sessionKeyClass != null)
+            this.attributes = new EnumMap(sessionKeyClass);
+        else
+            this.attributes = new TreeMap<>();
     }
 
     public int getId() {
@@ -70,32 +73,15 @@ public class Session {
     /**
      * 注册到SessionManager
      */
-    public void register(Header header) {
-        this.register(header, null);
-    }
-
-    public void register(Header header, Object subject) {
-        this.clientId = header.getClientId();
-        this.registered = true;
-        this.subject = subject;
-        sessionManager.put(clientId, this);
-    }
-
     public void register(Object clientId) {
-        this.register(clientId, null);
-    }
-
-    public void register(Object clientId, Object subject) {
-        this.clientId = clientId;
         this.registered = true;
-        this.subject = subject;
-        sessionManager.put(clientId, this);
+        this.clientId = clientId;
+        this.sessionManager.put(this.clientId, this);
     }
 
     public Object getClientId() {
         return clientId;
     }
-
 
     public long getCreationTime() {
         return creationTime;
@@ -110,36 +96,20 @@ public class Session {
         return lastAccessedTime;
     }
 
-    public Collection<String> getAttributeNames() {
+    public Collection<Object> getAttributeNames() {
         return attributes.keySet();
     }
 
-    public Object getAttribute(String name) {
+    public Object getAttribute(Object name) {
         return attributes.get(name);
     }
 
-    public void setAttribute(String name, Object value) {
+    public void setAttribute(Object name, Object value) {
         attributes.put(name, value);
     }
 
-    public Object removeAttribute(String name) {
+    public Object removeAttribute(Object name) {
         return attributes.remove(name);
-    }
-
-    public Object getSubject() {
-        return subject;
-    }
-
-    public void setSubject(Object subject) {
-        this.subject = subject;
-    }
-
-    public Object getSnapshot() {
-        return snapshot;
-    }
-
-    public void setSnapshot(Object snapshot) {
-        this.snapshot = snapshot;
     }
 
     public Integer getProtocolVersion() {
@@ -187,5 +157,85 @@ public class Session {
         sb.append(", reg=").append(registered);
         sb.append(']');
         return sb.toString();
+    }
+
+    private transient Map<String, SynchronousQueue> topicSubscribers = new HashMap<>();
+
+    private static final ChannelFutureListener ERROR_LOG_LISTENER = future -> {
+        Throwable t = future.cause();
+        if (t != null)
+            log.error("<<<<<<<<<<消息下发失败", t);
+    };
+
+    /**
+     * 发送通知类消息，不接收响应
+     */
+    public void notify(Object message) {
+        log.info("<<<<<<<<<<消息通知{},{}", this, message);
+        channel.writeAndFlush(message).addListener(ERROR_LOG_LISTENER);
+    }
+
+    /**
+     * 发送同步消息，接收响应
+     * 默认超时时间20秒
+     */
+    public <T> T request(Message request, Class<T> responseClass) {
+        return request(request, responseClass, 20000);
+    }
+
+    public <T> T request(Message request, Class<T> responseClass, long timeout) {
+        String key = requestKey(request, responseClass);
+        SynchronousQueue syncQueue = this.subscribe(key);
+        if (syncQueue == null) {
+            log.info("<<<<<<<<<<请勿重复发送,{}", request);
+        }
+
+        T result = null;
+        try {
+            log.info("<<<<<<<<<<消息请求{},{}", this, request);
+            ChannelFuture channelFuture = channel.writeAndFlush(request).addListener(ERROR_LOG_LISTENER);
+            if (channelFuture.awaitUninterruptibly().isSuccess())
+                result = (T) syncQueue.poll(timeout, TimeUnit.MILLISECONDS);
+        } catch (Throwable e) {
+            log.warn("<<<<<<<<<<等待响应超时" + this, e);
+        } finally {
+            this.unsubscribe(key);
+        }
+        return result;
+    }
+
+    /**
+     * 消息响应
+     */
+    public boolean response(Message message) {
+        SynchronousQueue queue = topicSubscribers.get(responseKey(message));
+        if (queue != null)
+            return queue.offer(message);
+        return false;
+    }
+
+    private SynchronousQueue subscribe(String key) {
+        SynchronousQueue queue = null;
+        synchronized (this) {
+            if (!topicSubscribers.containsKey(key))
+                topicSubscribers.put(key, queue = new SynchronousQueue());
+        }
+        return queue;
+    }
+
+    private void unsubscribe(String key) {
+        topicSubscribers.remove(key);
+    }
+
+    private static String requestKey(Message request, Class responseClass) {
+        if (Response.class.isAssignableFrom(responseClass))
+            return Integer.toString(request.getSerialNo());
+        return responseClass.getName();
+    }
+
+    private static String responseKey(Message response) {
+        if (response instanceof Response)
+            return Integer.toString(((Response) response).getResponseSerialNo());
+        return response.getClass().getName();
     }
 }

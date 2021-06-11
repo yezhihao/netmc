@@ -24,24 +24,35 @@ public class SessionManager {
 
     private SessionListener sessionListener;
 
+    private Class<? extends Enum> sessionKeyClass;
+
     public SessionManager() {
+
+    }
+
+    public SessionManager(Class<? extends Enum> sessionKeyClass) {
+        this(sessionKeyClass, null);
+    }
+
+    public SessionManager(SessionListener sessionListener) {
+        this(null, sessionListener);
+    }
+
+    public SessionManager(Class<? extends Enum> sessionKeyClass, SessionListener sessionListener) {
         this.sessionMap = new ConcurrentHashMap<>();
         this.versionCache = Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
+        this.sessionKeyClass = sessionKeyClass;
         this.remover = future -> {
             Session session = future.channel().attr(Session.KEY).get();
             if (session != null) {
                 sessionMap.remove(session.getClientId(), session);
             }
         };
-    }
-
-    public SessionManager(SessionListener sessionListener) {
-        this();
         this.sessionListener = sessionListener;
     }
 
     public Session newSession(Channel channel) {
-        Session session = new Session(channel, this);
+        Session session = new Session(sessionKeyClass, channel, this);
         callSessionCreatedListener(session);
         return session;
     }
