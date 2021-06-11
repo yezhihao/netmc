@@ -67,7 +67,7 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
         }
         time = System.currentTimeMillis() - time;
         if (time > 200)
-            log.info("=========消息ID{},处理耗时{}ms,", request.getMessageId(), time);
+            log.info("========={},处理耗时{}ms,", request.getMessageName(), time);
         if (response != null)
             ctx.writeAndFlush(response);
     }

@@ -15,6 +15,9 @@ public interface Message extends Serializable {
     /** 消息类型 */
     Serializable getMessageId();
 
+    /** 消息类型(日志输出) */
+    String getMessageName();
+
     /** 消息流水号 */
     int getSerialNo();
 }

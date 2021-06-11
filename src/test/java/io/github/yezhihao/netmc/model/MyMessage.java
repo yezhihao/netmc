@@ -46,6 +46,11 @@ public class MyMessage implements Message {
     }
 
     @Override
+    public String getMessageName() {
+        return String.valueOf(header.getType());
+    }
+
+    @Override
     public int getSerialNo() {
         return header.getSerialNo();
     }
