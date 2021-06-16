@@ -67,7 +67,7 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
         }
         time = System.currentTimeMillis() - time;
         if (time > 200)
-            log.info("========={},处理耗时{}ms,", request.getMessageName(), time);
+            log.info("====={},处理耗时{}ms,", request.getMessageName(), time);
         if (response != null)
             ctx.writeAndFlush(response);
     }
@@ -77,20 +77,20 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
         Channel channel = ctx.channel();
         Session session = sessionManager.newSession(channel);
         channel.attr(Session.KEY).set(session);
-        log.info(">>>>>终端连接{}", session);
+        log.info("<<<<<终端连接{}", session);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         Session session = ctx.channel().attr(Session.KEY).get();
         session.invalidate();
-        log.info("<<<<<断开连接{}", session);
+        log.info(">>>>>断开连接{}", session);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         Session session = ctx.channel().attr(Session.KEY).get();
-        log.warn("<<<<<消息处理异常" + session, e);
+        log.warn(">>>>>消息处理异常" + session, e);
     }
 
     @Override

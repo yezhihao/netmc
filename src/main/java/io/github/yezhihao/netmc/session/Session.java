@@ -168,14 +168,14 @@ public class Session {
     private static final ChannelFutureListener ERROR_LOG_LISTENER = future -> {
         Throwable t = future.cause();
         if (t != null)
-            log.error("<<<<<<<<<<消息下发失败", t);
+            log.error(">>>>>>>>>>消息下发失败", t);
     };
 
     /**
      * 发送通知类消息，不接收响应
      */
     public void notify(Object message) {
-        log.info("<<<<<<<<<<消息通知{},{}", this, message);
+        log.info(">>>>>>>>>>消息通知{},{}", this, message);
         channel.writeAndFlush(message).addListener(ERROR_LOG_LISTENER);
     }
 
@@ -191,17 +191,17 @@ public class Session {
         String key = requestKey(request, responseClass);
         SynchronousQueue syncQueue = this.subscribe(key);
         if (syncQueue == null) {
-            log.info("<<<<<<<<<<请勿重复发送,{}", request);
+            log.info("==========请勿重复发送,{}", request);
         }
 
         T result = null;
         try {
-            log.info("<<<<<<<<<<消息请求{},{}", this, request);
+            log.info(">>>>>>>>>>消息请求{},{}", this, request);
             ChannelFuture channelFuture = channel.writeAndFlush(request).addListener(ERROR_LOG_LISTENER);
             if (channelFuture.awaitUninterruptibly().isSuccess())
                 result = (T) syncQueue.poll(timeout, TimeUnit.MILLISECONDS);
         } catch (Throwable e) {
-            log.warn("<<<<<<<<<<等待响应超时" + this, e);
+            log.warn(">>>>>>>>>>等待响应超时" + this, e);
         } finally {
             this.unsubscribe(key);
         }
