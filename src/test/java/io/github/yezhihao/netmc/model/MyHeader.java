@@ -26,11 +26,11 @@ public class MyHeader {
         this.clientId = clientId;
     }
 
-    public Integer getType() {
+    public int getType() {
         return type;
     }
 
-    public void setType(Integer type) {
+    public void setType(int type) {
         this.type = type;
     }
 

@@ -5,6 +5,7 @@ import io.github.yezhihao.netmc.core.HandlerMapping;
 import io.github.yezhihao.netmc.core.handler.Handler;
 import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.session.Session;
+import io.github.yezhihao.netmc.session.SessionListener;
 import io.github.yezhihao.netmc.session.SessionManager;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -30,10 +31,16 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
 
     private SessionManager sessionManager;
 
-    public TCPServerHandler(HandlerMapping handlerMapping, HandlerInterceptor interceptor, SessionManager sessionManager) {
+    private SessionListener sessionListener;
+
+    public TCPServerHandler(HandlerMapping handlerMapping,
+                            HandlerInterceptor interceptor,
+                            SessionManager sessionManager,
+                            SessionListener sessionListener) {
         this.handlerMapping = handlerMapping;
         this.interceptor = interceptor;
         this.sessionManager = sessionManager;
+        this.sessionListener = sessionListener;
     }
 
     @Override
@@ -75,7 +82,7 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         Channel channel = ctx.channel();
-        Session session = sessionManager.newSession(channel);
+        Session session = Session.newInstance(channel, sessionManager, sessionListener);
         channel.attr(Session.KEY).set(session);
         log.info("<<<<<终端连接{}", session);
     }

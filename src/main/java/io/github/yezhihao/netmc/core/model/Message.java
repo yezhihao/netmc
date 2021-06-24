@@ -10,10 +10,10 @@ import java.io.Serializable;
 public interface Message extends Serializable {
 
     /** 客户端唯一标识 */
-    Serializable getClientId();
+    String getClientId();
 
     /** 消息类型 */
-    Serializable getMessageId();
+    int getMessageId();
 
     /** 消息类型(日志输出) */
     String getMessageName();

@@ -2,7 +2,6 @@ package io.github.yezhihao.netmc.session;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 
 import java.util.Collection;
@@ -16,77 +15,54 @@ import java.util.concurrent.TimeUnit;
  */
 public class SessionManager {
 
-    private Map<Object, Session> sessionMap;
+    private Map<String, Session> sessionMap;
 
-    private Cache<Object, Integer> versionCache;
+    private Cache<String, Object> offlineCache;
 
     private ChannelFutureListener remover;
-
-    private SessionListener sessionListener;
 
     private Class<? extends Enum> sessionKeyClass;
 
     public SessionManager() {
-
+        this(null);
     }
 
     public SessionManager(Class<? extends Enum> sessionKeyClass) {
-        this(sessionKeyClass, null);
-    }
-
-    public SessionManager(SessionListener sessionListener) {
-        this(null, sessionListener);
-    }
-
-    public SessionManager(Class<? extends Enum> sessionKeyClass, SessionListener sessionListener) {
         this.sessionMap = new ConcurrentHashMap<>();
-        this.versionCache = Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
+        this.offlineCache = Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build();
         this.sessionKeyClass = sessionKeyClass;
         this.remover = future -> {
             Session session = future.channel().attr(Session.KEY).get();
             if (session != null) {
-                sessionMap.remove(session.getClientId(), session);
+                sessionMap.remove(session.getId(), session);
             }
         };
-        this.sessionListener = sessionListener;
     }
 
-    public Session newSession(Channel channel) {
-        Session session = new Session(sessionKeyClass, channel, this);
-        callSessionCreatedListener(session);
-        return session;
-    }
-
-    protected void callSessionDestroyedListener(Session session) {
-        if (sessionListener != null)
-            sessionListener.sessionDestroyed(session);
-    }
-
-    protected void callSessionCreatedListener(Session session) {
-        if (sessionListener != null)
-            sessionListener.sessionCreated(session);
-    }
-
-    public Session get(Object clientId) {
-        return sessionMap.get(clientId);
+    public Session get(String sessionId) {
+        return sessionMap.get(sessionId);
     }
 
     public Collection<Session> all() {
         return sessionMap.values();
     }
 
-    protected void put(Object clientId, Session newSession) {
-        Session oldSession = sessionMap.put(clientId, newSession);
+    protected void add(Session newSession) {
+        Session oldSession = sessionMap.put(newSession.getId(), newSession);
         if (!newSession.equals(oldSession)) {
             newSession.channel.closeFuture().addListener(remover);
         }
     }
 
-    public void putVersion(Object clientId, int version) {
-        versionCache.put(clientId, version);
+    public void setOfflineCache(String clientId, Object value) {
+        offlineCache.put(clientId, value);
     }
 
-    public Integer getVersion(Object clientId) {
-        return versionCache.getIfPresent(clientId);
+    public Object getOfflineCache(String clientId) {
+        return offlineCache.getIfPresent(clientId);
+    }
+
+    public Class<? extends Enum> getSessionKeyClass() {
+        return sessionKeyClass;
     }
 }

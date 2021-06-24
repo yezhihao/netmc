@@ -41,7 +41,7 @@ public class MyMessage implements Message {
     }
 
     @Override
-    public Integer getMessageId() {
+    public int getMessageId() {
         return header.getType();
     }
 

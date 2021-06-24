@@ -6,6 +6,7 @@ import io.github.yezhihao.netmc.codec.MessageDecoder;
 import io.github.yezhihao.netmc.codec.MessageEncoder;
 import io.github.yezhihao.netmc.core.HandlerInterceptor;
 import io.github.yezhihao.netmc.core.HandlerMapping;
+import io.github.yezhihao.netmc.session.SessionListener;
 import io.github.yezhihao.netmc.session.SessionManager;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
@@ -25,6 +26,7 @@ public class NettyConfig {
     protected final HandlerMapping handlerMapping;
     protected final HandlerInterceptor handlerInterceptor;
     protected final SessionManager sessionManager;
+    protected final SessionListener sessionListener;
 
     private NettyConfig(int port,
                         int maxFrameLength,
@@ -34,7 +36,8 @@ public class NettyConfig {
                         MessageEncoder encoder,
                         HandlerMapping handlerMapping,
                         HandlerInterceptor handlerInterceptor,
-                        SessionManager sessionManager
+                        SessionManager sessionManager,
+                        SessionListener sessionListener
     ) {
         this.port = port;
         this.maxFrameLength = maxFrameLength;
@@ -45,7 +48,8 @@ public class NettyConfig {
         this.handlerMapping = handlerMapping;
         this.handlerInterceptor = handlerInterceptor;
         this.sessionManager = sessionManager;
-        this.adapter = new TCPServerHandler(this.handlerMapping, this.handlerInterceptor, this.sessionManager);
+        this.sessionListener = sessionListener;
+        this.adapter = new TCPServerHandler(this.handlerMapping, this.handlerInterceptor, this.sessionManager, this.sessionListener);
     }
 
     public static NettyConfig.Builder custom() {
@@ -63,6 +67,7 @@ public class NettyConfig {
         private HandlerMapping handlerMapping;
         private HandlerInterceptor handlerInterceptor;
         private SessionManager sessionManager;
+        private SessionListener sessionListener;
 
         public Builder() {
         }
@@ -121,6 +126,11 @@ public class NettyConfig {
             return this;
         }
 
+        public Builder setSessionListener(SessionListener sessionListener) {
+            this.sessionListener = sessionListener;
+            return this;
+        }
+
         public NettyConfig build() {
             return new NettyConfig(
                     this.port,
@@ -131,7 +141,8 @@ public class NettyConfig {
                     this.encoder,
                     this.handlerMapping,
                     this.handlerInterceptor,
-                    this.sessionManager
+                    this.sessionManager,
+                    this.sessionListener
             );
         }
     }
