@@ -9,6 +9,6 @@ import io.github.yezhihao.netmc.core.handler.Handler;
  */
 public interface HandlerMapping {
 
-    Handler getHandler(Object messageType);
+    Handler getHandler(int messageId);
 
 }

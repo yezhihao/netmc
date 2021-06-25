@@ -5,6 +5,7 @@ import io.github.yezhihao.netmc.core.HandlerMapping;
 import io.github.yezhihao.netmc.core.handler.Handler;
 import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.session.Session;
+import io.github.yezhihao.netmc.session.SessionListener;
 import io.github.yezhihao.netmc.session.SessionManager;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -30,10 +31,16 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
 
     private SessionManager sessionManager;
 
-    public TCPServerHandler(HandlerMapping handlerMapping, HandlerInterceptor interceptor, SessionManager sessionManager) {
+    private SessionListener sessionListener;
+
+    public TCPServerHandler(HandlerMapping handlerMapping,
+                            HandlerInterceptor interceptor,
+                            SessionManager sessionManager,
+                            SessionListener sessionListener) {
         this.handlerMapping = handlerMapping;
         this.interceptor = interceptor;
         this.sessionManager = sessionManager;
+        this.sessionListener = sessionListener;
     }
 
     @Override
@@ -47,7 +54,7 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
         long time = session.access();
 
         try {
-            Handler handler = handlerMapping.getHandler(request.getMessageType());
+            Handler handler = handlerMapping.getHandler(request.getMessageId());
             if (handler != null) {
                 if (!interceptor.beforeHandle(request, session))
                     return;
@@ -67,7 +74,7 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
         }
         time = System.currentTimeMillis() - time;
         if (time > 200)
-            log.info("=========消息ID{},处理耗时{}ms,", request.getHeader(), time);
+            log.info("====={},处理耗时{}ms,", request.getMessageName(), time);
         if (response != null)
             ctx.writeAndFlush(response);
     }
@@ -75,22 +82,22 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         Channel channel = ctx.channel();
-        Session session = sessionManager.newSession(channel);
+        Session session = Session.newInstance(channel, sessionManager, sessionListener);
         channel.attr(Session.KEY).set(session);
-        log.info(">>>>>终端连接{}", session);
+        log.info("<<<<<终端连接{}", session);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         Session session = ctx.channel().attr(Session.KEY).get();
         session.invalidate();
-        log.info("<<<<<断开连接{}", session);
+        log.info(">>>>>断开连接{}", session);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         Session session = ctx.channel().attr(Session.KEY).get();
-        log.warn("<<<<<消息处理异常" + session, e);
+        log.warn(">>>>>消息处理异常" + session, e);
     }
 
     @Override

@@ -1,8 +1,6 @@
 package io.github.yezhihao.netmc.model;
 
-import io.github.yezhihao.netmc.core.model.Header;
-
-public class MyHeader implements Header<String, Integer> {
+public class MyHeader {
 
     /** 客户端ID */
     private String clientId;
@@ -20,7 +18,6 @@ public class MyHeader implements Header<String, Integer> {
         this.serialNo = serialNo;
     }
 
-    @Override
     public String getClientId() {
         return clientId;
     }
@@ -29,21 +26,18 @@ public class MyHeader implements Header<String, Integer> {
         this.clientId = clientId;
     }
 
-    @Override
-    public Integer getType() {
+    public int getType() {
         return type;
     }
 
-    public void setType(Integer type) {
+    public void setType(int type) {
         this.type = type;
     }
 
-    @Override
     public int getSerialNo() {
         return serialNo;
     }
 
-    @Override
     public void setSerialNo(int serialNo) {
         this.serialNo = serialNo;
     }

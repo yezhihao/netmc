@@ -56,7 +56,7 @@ public abstract class AbstractHandlerMapping implements HandlerMapping {
     /**
      * 根据消息类型获取Handler
      */
-    public Handler getHandler(Object messageType) {
-        return handlerMap.get(messageType);
+    public Handler getHandler(int messageId) {
+        return handlerMap.get(messageId);
     }
 }

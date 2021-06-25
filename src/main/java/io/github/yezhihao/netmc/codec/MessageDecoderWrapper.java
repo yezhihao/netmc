@@ -37,7 +37,7 @@ public class MessageDecoderWrapper extends ChannelInboundHandlerAdapter {
                         hex = ByteBufUtil.hexDump(buf);
                     else
                         hex = ByteBufUtil.hexDump(buf.slice(0, 32)) + "..." + ByteBufUtil.hexDump(buf.slice(buf.readableBytes() - 32, 32));
-                    log.info(">>>>>原始报文[ip={}],hex={}", ctx.channel().remoteAddress(), hex);
+                    log.info("<<<<<[ip={}],payload={}", ctx.channel().remoteAddress(), hex);
                 }
                 Object message = decoder.decode(buf, ctx.channel().attr(Session.KEY).get());
                 if (message != null)
