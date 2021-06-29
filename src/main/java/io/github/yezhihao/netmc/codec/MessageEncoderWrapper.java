@@ -1,15 +1,13 @@
 package io.github.yezhihao.netmc.codec;
 
+import io.github.yezhihao.netmc.session.Session;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.EncoderException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 基础消息编码
@@ -18,8 +16,6 @@ import org.slf4j.LoggerFactory;
  */
 @ChannelHandler.Sharable
 public class MessageEncoderWrapper extends ChannelOutboundHandlerAdapter {
-
-    private static final Logger log = LoggerFactory.getLogger(MessageEncoderWrapper.class.getSimpleName());
 
     private MessageEncoder encoder;
 
@@ -34,9 +30,7 @@ public class MessageEncoderWrapper extends ChannelOutboundHandlerAdapter {
             if (msg instanceof ByteBuf)
                 buf = (ByteBuf) msg;
             else
-                buf = encoder.encode(msg);
-            if (log.isInfoEnabled())
-                log.info(">>>>>[ip={}],payload={}", ctx.channel().remoteAddress(), ByteBufUtil.hexDump(buf));
+                buf = encoder.encode(msg, ctx.channel().attr(Session.KEY).get());
 
             if (buf.isReadable()) {
                 ctx.write(buf, promise);

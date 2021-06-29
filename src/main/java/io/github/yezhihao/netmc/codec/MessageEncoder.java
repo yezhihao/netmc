@@ -1,5 +1,6 @@
 package io.github.yezhihao.netmc.codec;
 
+import io.github.yezhihao.netmc.session.Session;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -10,5 +11,7 @@ import io.netty.buffer.ByteBuf;
 public interface MessageEncoder<T> {
 
     ByteBuf encode(T message);
+
+    ByteBuf encode(T message, Session session);
 
 }

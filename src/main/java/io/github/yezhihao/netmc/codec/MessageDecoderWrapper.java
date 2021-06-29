@@ -2,13 +2,10 @@ package io.github.yezhihao.netmc.codec;
 
 import io.github.yezhihao.netmc.session.Session;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.DecoderException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 基础消息解码
@@ -17,8 +14,6 @@ import org.slf4j.LoggerFactory;
  */
 @ChannelHandler.Sharable
 public class MessageDecoderWrapper extends ChannelInboundHandlerAdapter {
-
-    private static final Logger log = LoggerFactory.getLogger(MessageDecoderWrapper.class.getSimpleName());
 
     private MessageDecoder decoder;
 
@@ -31,14 +26,6 @@ public class MessageDecoderWrapper extends ChannelInboundHandlerAdapter {
         if (msg instanceof ByteBuf) {
             ByteBuf buf = (ByteBuf) msg;
             try {
-                if (log.isInfoEnabled()) {
-                    String hex;
-                    if (buf.readableBytes() < 1048)
-                        hex = ByteBufUtil.hexDump(buf);
-                    else
-                        hex = ByteBufUtil.hexDump(buf.slice(0, 32)) + "..." + ByteBufUtil.hexDump(buf.slice(buf.readableBytes() - 32, 32));
-                    log.info("<<<<<[ip={}],payload={}", ctx.channel().remoteAddress(), hex);
-                }
                 Object message = decoder.decode(buf, ctx.channel().attr(Session.KEY).get());
                 if (message != null)
                     ctx.fireChannelRead(message);
