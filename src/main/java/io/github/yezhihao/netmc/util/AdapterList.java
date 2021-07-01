@@ -4,6 +4,10 @@ import java.util.AbstractList;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * @author yezhihao
+ * home https://gitee.com/yezhihao/jt808-server
+ */
 public final class AdapterList<S, T> extends AbstractList<T> {
 
     private final List<S> src;

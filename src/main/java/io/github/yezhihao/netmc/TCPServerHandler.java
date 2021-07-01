@@ -16,6 +16,8 @@ import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 /**
  * @author yezhihao
  * home https://gitee.com/yezhihao/jt808-server
@@ -97,7 +99,10 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         Session session = ctx.channel().attr(Session.KEY).get();
-        log.warn(">>>>>消息处理异常" + session, e);
+        if (e instanceof IOException)
+            log.warn(">>>>>终端主动断开连接{},{}", e.getMessage(), session);
+        else
+            log.warn(">>>>>消息处理异常" + session, e);
     }
 
     @Override

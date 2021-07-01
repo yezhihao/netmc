@@ -10,8 +10,6 @@ import io.netty.buffer.ByteBuf;
  */
 public interface MessageEncoder<T> {
 
-    ByteBuf encode(T message);
-
     ByteBuf encode(T message, Session session);
 
 }
