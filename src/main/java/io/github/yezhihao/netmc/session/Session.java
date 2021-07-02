@@ -58,20 +58,6 @@ public class Session {
         return session;
     }
 
-    public int nextSerialNo() {
-        int current;
-        int next;
-        do {
-            current = serialNo.get();
-            next = current > 0xffff ? 0 : current;
-        } while (!serialNo.compareAndSet(current, next + 1));
-        return next;
-    }
-
-    public boolean isRegistered() {
-        return sessionId != null;
-    }
-
     /**
      * 注册到SessionManager
      */
@@ -86,6 +72,10 @@ public class Session {
         this.clientId = message.getClientId();
         if (sessionManager != null)
             sessionManager.add(this);
+    }
+
+    public boolean isRegistered() {
+        return sessionId != null;
     }
 
     public String getId() {
@@ -150,6 +140,16 @@ public class Session {
             sessionListener.sessionCreated(this);
     }
 
+    public int nextSerialNo() {
+        int current;
+        int next;
+        do {
+            current = serialNo.get();
+            next = current > 0xffff ? 0 : current;
+        } while (!serialNo.compareAndSet(current, next + 1));
+        return next;
+    }
+
     public void invalidate() {
         channel.close();
         callSessionDestroyedListener();
@@ -158,10 +158,10 @@ public class Session {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder(66);
-        sb.append("[ip=").append(channel.remoteAddress());
-        sb.append(", sid=").append(sessionId);
-        sb.append(", cid=").append(clientId);
-        sb.append(']');
+        sb.append("{sid=").append(sessionId);
+        sb.append(",cid=").append(clientId);
+        sb.append(",ip=").append(channel.remoteAddress());
+        sb.append('}');
         return sb.toString();
     }
 

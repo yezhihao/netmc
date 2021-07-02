@@ -10,11 +10,6 @@ import java.nio.charset.StandardCharsets;
 public class MyMessageDecoder implements MessageDecoder {
 
     @Override
-    public Object decode(ByteBuf buf) {
-        return decode(buf);
-    }
-
-    @Override
     public Object decode(ByteBuf buf, Session session) {
         String msgStr = buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8).toString();
         String[] allStr = msgStr.split(";");

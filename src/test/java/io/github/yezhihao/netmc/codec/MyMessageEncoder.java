@@ -2,6 +2,7 @@ package io.github.yezhihao.netmc.codec;
 
 import io.github.yezhihao.netmc.model.MyHeader;
 import io.github.yezhihao.netmc.model.MyMessage;
+import io.github.yezhihao.netmc.session.Session;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -10,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 public class MyMessageEncoder implements MessageEncoder<MyMessage> {
 
     @Override
-    public ByteBuf encode(MyMessage message) {
+    public ByteBuf encode(MyMessage message, Session session) {
         MyHeader header = message.getHeader();
 
         StringBuilder msg = new StringBuilder();
