@@ -2,6 +2,7 @@ package io.github.yezhihao.netmc.codec;
 
 import io.github.yezhihao.netmc.session.Session;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -31,7 +32,7 @@ public class MessageDecoderWrapper extends ChannelInboundHandlerAdapter {
                     ctx.fireChannelRead(message);
                 buf.skipBytes(buf.readableBytes());
             } catch (Exception e) {
-                throw new DecoderException(e);
+                throw new DecoderException(ByteBufUtil.hexDump(buf), e);
             } finally {
                 buf.release();
             }
