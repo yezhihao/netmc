@@ -72,6 +72,8 @@ public class Session {
         this.clientId = message.getClientId();
         if (sessionManager != null)
             sessionManager.add(this);
+        if (sessionListener != null)
+            sessionListener.sessionRegistered(this);
     }
 
     public boolean isRegistered() {
