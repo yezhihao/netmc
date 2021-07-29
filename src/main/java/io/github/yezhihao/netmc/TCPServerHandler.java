@@ -100,7 +100,7 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         Session session = ctx.channel().attr(Session.KEY).get();
         if (e instanceof IOException)
-            log.warn(">>>>>终端主动断开连接{},{}", e.getMessage(), session);
+            log.warn(">>>>>终端主动断开连接: {} {}", e.getMessage(), session);
         else
             log.warn(">>>>>消息处理异常" + session, e);
     }
