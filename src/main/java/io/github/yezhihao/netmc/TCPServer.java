@@ -59,7 +59,7 @@ public class TCPServer {
                         @Override
                         public void initChannel(NioSocketChannel channel) {
                             channel.pipeline()
-                                    .addLast(new IdleStateHandler(4, 0, 0, TimeUnit.MINUTES))
+                                    .addLast(new IdleStateHandler(config.readerIdleTime, config.writerIdleTime, config.allIdleTime, TimeUnit.SECONDS))
                                     .addLast("frameDecoder", frameDecoder())
                                     .addLast("decoder", messageDecoderWrapper)
                                     .addLast("encoder", messageEncoderWrapper)

@@ -16,6 +16,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  */
 public class NettyConfig {
 
+    protected final int readerIdleTime;
+    protected final int writerIdleTime;
+    protected final int allIdleTime;
     protected final int port;
     protected final int maxFrameLength;
     protected final LengthField lengthField;
@@ -28,7 +31,10 @@ public class NettyConfig {
     protected final SessionManager sessionManager;
     protected final SessionListener sessionListener;
 
-    private NettyConfig(int port,
+    private NettyConfig(int readerIdleTime,
+                        int writerIdleTime,
+                        int allIdleTime,
+                        int port,
                         int maxFrameLength,
                         LengthField lengthField,
                         Delimiter[] delimiter,
@@ -39,6 +45,9 @@ public class NettyConfig {
                         SessionManager sessionManager,
                         SessionListener sessionListener
     ) {
+        this.readerIdleTime = readerIdleTime;
+        this.writerIdleTime = writerIdleTime;
+        this.allIdleTime = allIdleTime;
         this.port = port;
         this.maxFrameLength = maxFrameLength;
         this.lengthField = lengthField;
@@ -58,6 +67,9 @@ public class NettyConfig {
 
     public static class Builder {
 
+        private int readerIdleTime = 240;
+        private int writerIdleTime = 0;
+        private int allIdleTime = 0;
         private int port;
         private int maxFrameLength;
         private LengthField lengthField;
@@ -70,6 +82,13 @@ public class NettyConfig {
         private SessionListener sessionListener;
 
         public Builder() {
+        }
+
+        public Builder setIdleStateTime(int readerIdleTime, int writerIdleTime, int allIdleTime) {
+            this.readerIdleTime = readerIdleTime;
+            this.writerIdleTime = writerIdleTime;
+            this.allIdleTime = allIdleTime;
+            return this;
         }
 
         public Builder setPort(int port) {
@@ -133,6 +152,9 @@ public class NettyConfig {
 
         public NettyConfig build() {
             return new NettyConfig(
+                    this.readerIdleTime,
+                    this.writerIdleTime,
+                    this.allIdleTime,
                     this.port,
                     this.maxFrameLength,
                     this.lengthField,

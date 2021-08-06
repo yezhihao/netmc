@@ -100,7 +100,7 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         Session session = ctx.channel().attr(Session.KEY).get();
         if (e instanceof IOException)
-            log.warn(">>>>>终端主动断开连接: {} {}", e.getMessage(), session);
+            log.warn("<<<<<终端断开连接{} {}", session, e.getMessage());
         else
             log.warn(">>>>>消息处理异常" + session, e);
     }
@@ -110,9 +110,9 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
             IdleState state = event.state();
-            if (state == IdleState.READER_IDLE || state == IdleState.WRITER_IDLE) {
+            if (state == IdleState.READER_IDLE || state == IdleState.WRITER_IDLE || state == IdleState.ALL_IDLE) {
                 Session session = ctx.channel().attr(Session.KEY).get();
-                log.warn("<<<<<终端主动断开连接{}", session);
+                log.warn(">>>>>终端心跳超时{} {}", session, state);
                 ctx.close();
             }
         }
