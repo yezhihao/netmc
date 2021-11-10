@@ -34,7 +34,7 @@ public abstract class Handler {
         try {
             for (int i = 0; i < types.length; i++) {
                 Type type = types[i];
-                Class clazz;
+                Class<?> clazz;
                 if (type instanceof ParameterizedTypeImpl)
                     clazz = (Class<?>) ((ParameterizedTypeImpl) type).getActualTypeArguments()[0];
                 else

@@ -16,7 +16,7 @@ import io.netty.handler.codec.DecoderException;
 @ChannelHandler.Sharable
 public class MessageDecoderWrapper extends ChannelInboundHandlerAdapter {
 
-    private MessageDecoder decoder;
+    private final MessageDecoder decoder;
 
     public MessageDecoderWrapper(MessageDecoder decoder) {
         this.decoder = decoder;

@@ -27,13 +27,13 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(TCPServerHandler.class.getSimpleName());
 
-    private HandlerMapping handlerMapping;
+    private final HandlerMapping handlerMapping;
 
-    private HandlerInterceptor interceptor;
+    private final HandlerInterceptor interceptor;
 
-    private SessionManager sessionManager;
+    private final SessionManager sessionManager;
 
-    private SessionListener sessionListener;
+    private final SessionListener sessionListener;
 
     public TCPServerHandler(HandlerMapping handlerMapping,
                             HandlerInterceptor interceptor,

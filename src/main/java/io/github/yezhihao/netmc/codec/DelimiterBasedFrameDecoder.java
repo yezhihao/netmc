@@ -40,7 +40,7 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
         }
     }
 
-    protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+    protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) {
         // Try all delimiters and choose the delimiter which yields the shortest frame.
         int minFrameLength = Integer.MAX_VALUE;
         Delimiter minDelim = null;

@@ -100,7 +100,7 @@ public class LengthFieldAndDelimiterFrameDecoder extends DelimiterBasedFrameDeco
         throw new CorruptedFrameException("Adjusted frame length (" + frameLength + ") is less than initialBytesToStrip: " + initialBytesToStrip);
     }
 
-    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) {
         if (in.readableBytes() < this.lengthFieldEndOffset) {
             return null;
         } else {

@@ -16,7 +16,7 @@ public class SimpleHandler extends Handler {
         super(actionClass, actionMethod, desc);
     }
 
-    public Message invoke(Message request, Session session) throws Exception {
+    public <T extends Message> T invoke(T request, Session session) throws Exception {
         return super.invoke(request, session);
     }
 }

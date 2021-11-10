@@ -33,8 +33,8 @@ public class TCPServer {
     private EventLoopGroup bossGroup = null;
     private EventLoopGroup workerGroup = null;
 
-    private String name;
-    private NettyConfig config;
+    private final String name;
+    private final NettyConfig config;
 
     public TCPServer(String name, NettyConfig config) {
         this.name = name;
@@ -53,8 +53,8 @@ public class TCPServer {
                     .childOption(NioChannelOption.TCP_NODELAY, true)
                     .childHandler(new ChannelInitializer<NioSocketChannel>() {
 
-                        private MessageEncoderWrapper messageEncoderWrapper = new MessageEncoderWrapper(config.encoder);
-                        private MessageDecoderWrapper messageDecoderWrapper = new MessageDecoderWrapper(config.decoder);
+                        private final MessageEncoderWrapper messageEncoderWrapper = new MessageEncoderWrapper(config.encoder);
+                        private final MessageDecoderWrapper messageDecoderWrapper = new MessageDecoderWrapper(config.decoder);
 
                         @Override
                         public void initChannel(NioSocketChannel channel) {
@@ -71,7 +71,7 @@ public class TCPServer {
             log.warn("==={}启动成功, port={}===", name, config.port);
             channelFuture.channel().closeFuture().sync();
         } catch (Exception e) {
-            log.warn("==={}出现异常, port={}===", e);
+            log.warn("==={}出现异常, port={}===", e, config.port);
         } finally {
             stop();
         }

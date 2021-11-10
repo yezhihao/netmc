@@ -23,17 +23,17 @@ public class AsyncBatchHandler extends Handler {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncBatchHandler.class.getSimpleName());
 
-    private ConcurrentLinkedQueue<Message> queue;
+    private final ConcurrentLinkedQueue<Message> queue;
 
-    private ThreadPoolExecutor executor;
+    private final ThreadPoolExecutor executor;
 
-    private int poolSize;
+    private final int poolSize;
 
-    private int maxElements;
+    private final int maxElements;
 
-    private int maxWait;
+    private final int maxWait;
 
-    private int warningLines;
+    private final int warningLines;
 
     public AsyncBatchHandler(Object actionClass, Method actionMethod, String desc, int poolSize, int maxElements, int maxWait) {
         super(actionClass, actionMethod, desc);
@@ -50,8 +50,7 @@ public class AsyncBatchHandler extends Handler {
         this.warningLines = maxElements * poolSize * 50;
 
         this.queue = new ConcurrentLinkedQueue();
-        this.executor = new ThreadPoolExecutor(this.poolSize, this.poolSize, 1000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(400),
-                new BasicThreadFactory.Builder().daemon(true).namingPattern(actionMethod.getName() + "-pool-%d").build());
+        this.executor = new ThreadPoolExecutor(this.poolSize, this.poolSize, 1000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(400), new BasicThreadFactory.Builder().daemon(true).namingPattern(actionMethod.getName() + "-pool-%d").build());
 
         for (int i = 0; i < poolSize; i++) {
             boolean master = i == 0;
@@ -65,7 +64,7 @@ public class AsyncBatchHandler extends Handler {
         }
     }
 
-    public Message invoke(Message request, Session session) {
+    public <T extends Message> T invoke(T request, Session session) {
         queue.offer(request);
         return null;
     }

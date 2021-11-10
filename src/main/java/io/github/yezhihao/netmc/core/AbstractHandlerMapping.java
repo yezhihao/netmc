@@ -17,7 +17,7 @@ import java.util.Map;
  */
 public abstract class AbstractHandlerMapping implements HandlerMapping {
 
-    private final Map<Object, Handler> handlerMap = new HashMap(60);
+    private final Map<Object, Handler> handlerMap = new HashMap<>(64);
 
     /**
      * 将Endpoint中被@Mapping标记的方法注册到映射表
@@ -25,8 +25,6 @@ public abstract class AbstractHandlerMapping implements HandlerMapping {
     protected synchronized void registerHandlers(Object bean) {
         Class<?> beanClass = bean.getClass();
         Method[] methods = beanClass.getDeclaredMethods();
-        if (methods == null)
-            return;
 
         for (Method method : methods) {
 
