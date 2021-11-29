@@ -16,7 +16,7 @@ public class DefaultHandlerMapping extends AbstractHandlerMapping {
 
         for (Class<?> endpointClass : endpointClasses) {
             try {
-                Object bean = endpointClass.newInstance();
+                Object bean = endpointClass.getDeclaredConstructor((Class<?>[]) null).newInstance((Object[]) null);
                 super.registerHandlers(bean);
             } catch (Exception e) {
                 throw new RuntimeException(e);

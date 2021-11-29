@@ -45,7 +45,7 @@ public class LengthFieldAndDelimiterFrameDecoder extends DelimiterBasedFrameDeco
         this.failFast = failFast;
     }
 
-    protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         if (discardingTooLongFrame) {
             discardingTooLongFrame(in);
         }

@@ -15,13 +15,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class SessionManager {
 
-    private Map<String, Session> sessionMap;
+    private final Map<String, Session> sessionMap;
 
-    private Cache<String, Object> offlineCache;
+    private final Cache<String, Object> offlineCache;
 
-    private ChannelFutureListener remover;
+    private final ChannelFutureListener remover;
 
-    private Class<? extends Enum> sessionKeyClass;
+    private final Class<? extends Enum> sessionKeyClass;
 
     public SessionManager() {
         this(null);

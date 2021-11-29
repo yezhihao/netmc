@@ -29,7 +29,7 @@ public class Session {
     private final SessionListener sessionListener;
 
     private final long creationTime;
-    private volatile long lastAccessedTime;
+    private long lastAccessedTime;
     private final Map<Object, Object> attributes;
 
     private String sessionId;
@@ -187,29 +187,40 @@ public class Session {
      * 发送同步消息，接收响应
      * 默认超时时间20秒
      */
-    public <T> T request(Message request, Class<T> responseClass) {
+    public <T> MessageResult<T> request(Message request, Class<T> responseClass) {
         return request(request, responseClass, 20000);
     }
 
-    public <T> T request(Message request, Class<T> responseClass, long timeout) {
+    public <T> MessageResult<T> request(Message request, Class<T> responseClass, long timeout) {
         String key = requestKey(request, responseClass);
         SynchronousQueue syncQueue = this.subscribe(key);
         if (syncQueue == null) {
             log.info("==========请勿重复发送,{}", request);
         }
 
-        T result = null;
+        log.info(">>>>>>>>>>消息请求{},{}", this, request);
         try {
-            log.info(">>>>>>>>>>消息请求{},{}", this, request);
-            ChannelFuture channelFuture = channel.writeAndFlush(request).addListener(ERROR_LOG_LISTENER);
-            if (channelFuture.awaitUninterruptibly().isSuccess())
-                result = (T) syncQueue.poll(timeout, TimeUnit.MILLISECONDS);
-        } catch (Throwable e) {
-            log.warn(">>>>>>>>>>等待响应超时" + this, e);
+            long start = System.currentTimeMillis();
+            ChannelFuture future = channel.writeAndFlush(request);
+            future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+
+            if (!future.awaitUninterruptibly(timeout))
+                return new MessageResult(MessageState.TIME_OUT);
+
+            long time = System.currentTimeMillis() - start;
+
+            if (!future.isSuccess())
+                return new MessageResult(MessageState.SEND_FAILED, future.cause());
+
+            T result = (T) syncQueue.poll(timeout - time, TimeUnit.MILLISECONDS);
+            if (result == null)
+                return new MessageResult(MessageState.NOT_RESPONDING);
+            return new MessageResult<>(result);
+        } catch (InterruptedException e) {
+            return new MessageResult(MessageState.SUBSCRIPTION_FAILED, e);
         } finally {
             this.unsubscribe(key);
         }
-        return result;
     }
 
     /**

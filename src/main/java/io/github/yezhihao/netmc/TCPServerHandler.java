@@ -112,7 +112,7 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
             IdleState state = event.state();
             if (state == IdleState.READER_IDLE || state == IdleState.WRITER_IDLE || state == IdleState.ALL_IDLE) {
                 Session session = ctx.channel().attr(Session.KEY).get();
-                log.warn(">>>>>终端心跳超时{} {}", session, state);
+                log.warn(">>>>>终端心跳超时{} {}", state, session);
                 ctx.close();
             }
         }

@@ -91,12 +91,12 @@ public class BasicThreadFactory implements ThreadFactory {
         }
 
         public Builder daemon(final boolean daemon) {
-            this.daemon = Boolean.valueOf(daemon);
+            this.daemon = daemon;
             return this;
         }
 
         public Builder priority(final int priority) {
-            this.priority = Integer.valueOf(priority);
+            this.priority = priority;
             return this;
         }
 
