@@ -4,14 +4,12 @@ import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.core.model.Response;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.util.AttributeKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoSink;
 
 import java.util.*;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -19,8 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * home https://gitee.com/yezhihao/jt808-server
  */
 public class Session {
-
-    private static final Logger log = LoggerFactory.getLogger(Session.class.getSimpleName());
 
     public static final AttributeKey<Session> KEY = AttributeKey.newInstance(Session.class.getName());
 
@@ -167,79 +163,67 @@ public class Session {
         return sb.toString();
     }
 
-    private transient Map<String, SynchronousQueue> topicSubscribers = new HashMap<>();
+    private final Map<String, MonoSink<Message>> topicSubscribers = new HashMap<>();
 
-    private static final ChannelFutureListener ERROR_LOG_LISTENER = future -> {
-        Throwable t = future.cause();
-        if (t != null)
-            log.error(">>>>>>>>>>消息下发失败", t);
-    };
+    private static final Mono Rejected = Mono.error(new RejectedExecutionException("客户端暂未响应，请勿重复发送"));
 
     /**
-     * 发送通知类消息，不接收响应
+     * 异步发送通知类消息
+     * 同步发送 mono.block()
+     * 订阅回调 mono.doOnSuccess({处理成功}).doOnError({处理异常}).subscribe()开始订阅
      */
-    public void notify(Object message) {
-        log.info(">>>>>>>>>>消息通知{},{}", this, message);
-        channel.writeAndFlush(message).addListener(ERROR_LOG_LISTENER);
+    public Mono<Void> notify(Object message) {
+        ChannelFuture channelFuture = channel.writeAndFlush(message);
+        Mono<Void> mono = Mono.create(sink -> channelFuture.addListener(future -> {
+            if (future.isSuccess()) {
+                sink.success();
+            } else {
+                sink.error(future.cause());
+            }
+        }));
+        return mono;
     }
 
     /**
-     * 发送同步消息，接收响应
-     * 默认超时时间20秒
+     * 异步发送消息，接收响应
+     * 同步接收 mono.block()
+     * 订阅回调 mono.doOnSuccess({处理成功}).doOnError({处理异常}).subscribe()开始订阅
      */
-    public <T> MessageResult<T> request(Message request, Class<T> responseClass) {
-        return request(request, responseClass, 20000);
-    }
-
-    public <T> MessageResult<T> request(Message request, Class<T> responseClass, long timeout) {
+    public <T> Mono<T> request(Message request, Class<T> responseClass) {
         String key = requestKey(request, responseClass);
-        SynchronousQueue syncQueue = this.subscribe(key);
-        if (syncQueue == null) {
-            log.info("==========请勿重复发送,{}", request);
+        Mono<Message> receive = this.subscribe(key);
+        if (receive == null) {
+            return Rejected;
         }
 
-        log.info(">>>>>>>>>>消息请求{},{}", this, request);
-        try {
-            long start = System.currentTimeMillis();
-            ChannelFuture future = channel.writeAndFlush(request);
-            future.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-
-            if (!future.awaitUninterruptibly(timeout))
-                return new MessageResult(MessageState.TIME_OUT);
-
-            long time = System.currentTimeMillis() - start;
-
-            if (!future.isSuccess())
-                return new MessageResult(MessageState.SEND_FAILED, future.cause());
-
-            T result = (T) syncQueue.poll(timeout - time, TimeUnit.MILLISECONDS);
-            if (result == null)
-                return new MessageResult(MessageState.NOT_RESPONDING);
-            return new MessageResult<>(result);
-        } catch (InterruptedException e) {
-            return new MessageResult(MessageState.SUBSCRIPTION_FAILED, e);
-        } finally {
-            this.unsubscribe(key);
-        }
+        ChannelFuture channelFuture = channel.writeAndFlush(request);
+        Mono<Message> mono = Mono.create(sink -> channelFuture.addListener(future -> {
+            if (future.isSuccess()) {
+                sink.success(future);
+            } else {
+                sink.error(future.cause());
+            }
+        })).then(receive).doFinally(signal -> unsubscribe(key));
+        return (Mono<T>) mono;
     }
 
     /**
      * 消息响应
      */
     public boolean response(Message message) {
-        SynchronousQueue queue = topicSubscribers.get(responseKey(message));
-        if (queue != null)
-            return queue.offer(message);
+        MonoSink<Message> sink = topicSubscribers.get(responseKey(message));
+        if (sink != null) {
+            sink.success(message);
+            return true;
+        }
         return false;
     }
 
-    private SynchronousQueue subscribe(String key) {
-        SynchronousQueue queue = null;
-        synchronized (this) {
-            if (!topicSubscribers.containsKey(key))
-                topicSubscribers.put(key, queue = new SynchronousQueue());
+    private Mono<Message> subscribe(String key) {
+        synchronized (topicSubscribers) {
+            if (!topicSubscribers.containsKey(key)) return Mono.create(sink -> topicSubscribers.put(key, sink));
         }
-        return queue;
+        return null;
     }
 
     private void unsubscribe(String key) {
