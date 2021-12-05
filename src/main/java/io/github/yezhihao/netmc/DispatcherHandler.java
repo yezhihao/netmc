@@ -23,9 +23,9 @@ import java.io.IOException;
  * home https://gitee.com/yezhihao/jt808-server
  */
 @ChannelHandler.Sharable
-public class TCPServerHandler extends ChannelInboundHandlerAdapter {
+public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(TCPServerHandler.class.getSimpleName());
+    private static final Logger log = LoggerFactory.getLogger(DispatcherHandler.class.getSimpleName());
 
     private final HandlerMapping handlerMapping;
 
@@ -35,10 +35,10 @@ public class TCPServerHandler extends ChannelInboundHandlerAdapter {
 
     private final SessionListener sessionListener;
 
-    public TCPServerHandler(HandlerMapping handlerMapping,
-                            HandlerInterceptor interceptor,
-                            SessionManager sessionManager,
-                            SessionListener sessionListener) {
+    public DispatcherHandler(HandlerMapping handlerMapping,
+                             HandlerInterceptor interceptor,
+                             SessionManager sessionManager,
+                             SessionListener sessionListener) {
         this.handlerMapping = handlerMapping;
         this.interceptor = interceptor;
         this.sessionManager = sessionManager;

@@ -58,7 +58,7 @@ public class NettyConfig {
         this.handlerInterceptor = handlerInterceptor;
         this.sessionManager = sessionManager;
         this.sessionListener = sessionListener;
-        this.adapter = new TCPServerHandler(this.handlerMapping, this.handlerInterceptor, this.sessionManager, this.sessionListener);
+        this.adapter = new DispatcherHandler(this.handlerMapping, this.handlerInterceptor, this.sessionManager, this.sessionListener);
     }
 
     public static NettyConfig.Builder custom() {
