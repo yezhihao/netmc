@@ -15,6 +15,18 @@ import java.nio.charset.StandardCharsets;
 public class QuickStart {
 
     public static void main(String[] args) {
+        Server udpServer = new NettyConfig.Builder()
+                .setPort(7611)
+                .setDelimiters(new byte[][]{"|".getBytes(StandardCharsets.UTF_8)})
+                .setDecoder(new MyMessageDecoder())
+                .setEncoder(new MyMessageEncoder())
+                .setHandlerMapping(new DefaultHandlerMapping("io.github.yezhihao.netmc.endpoint"))
+                .setHandlerInterceptor(new MyHandlerInterceptor())
+                .setSessionManager(new SessionManager())
+                .setEnableUDP(true)
+                .build();
+        udpServer.start();
+
         Server tcpServer = new NettyConfig.Builder()
                 .setPort(7611)
                 .setMaxFrameLength(1024)
@@ -22,23 +34,9 @@ public class QuickStart {
                 .setDecoder(new MyMessageDecoder())
                 .setEncoder(new MyMessageEncoder())
                 .setHandlerMapping(new DefaultHandlerMapping("io.github.yezhihao.netmc.endpoint"))
-//                .setHandlerMapping(new SpringHandlerMapping("org.yzh.web.endpoint"))
                 .setHandlerInterceptor(new MyHandlerInterceptor())
                 .setSessionManager(new SessionManager())
                 .build();
         tcpServer.start();
-
-        Server udpServer = new NettyConfig.Builder()
-                .setPort(7610)
-                .setDelimiters(new byte[][]{"|".getBytes(StandardCharsets.UTF_8)})
-                .setDecoder(new MyMessageDecoder())
-                .setEncoder(new MyMessageEncoder())
-                .setHandlerMapping(new DefaultHandlerMapping("io.github.yezhihao.netmc.endpoint"))
-//                .setHandlerMapping(new SpringHandlerMapping("org.yzh.web.endpoint"))
-                .setHandlerInterceptor(new MyHandlerInterceptor())
-                .setSessionManager(new SessionManager())
-                .setEnableUDP(true)
-                .build();
-        udpServer.start();
     }
 }

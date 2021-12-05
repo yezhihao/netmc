@@ -6,59 +6,83 @@ import io.github.yezhihao.netmc.codec.MessageDecoder;
 import io.github.yezhihao.netmc.codec.MessageEncoder;
 import io.github.yezhihao.netmc.core.HandlerInterceptor;
 import io.github.yezhihao.netmc.core.HandlerMapping;
-import io.github.yezhihao.netmc.session.SessionListener;
 import io.github.yezhihao.netmc.session.SessionManager;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.internal.ObjectUtil;
 
 /**
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 public class NettyConfig {
 
     protected final int readerIdleTime;
     protected final int writerIdleTime;
     protected final int allIdleTime;
-    protected final int port;
-    protected final int maxFrameLength;
+    protected final Integer port;
+    protected final Integer maxFrameLength;
     protected final LengthField lengthField;
-    protected final Delimiter[] delimiter;
+    protected final Delimiter[] delimiters;
     protected final MessageDecoder decoder;
     protected final MessageEncoder encoder;
-    protected final ChannelInboundHandlerAdapter adapter;
     protected final HandlerMapping handlerMapping;
     protected final HandlerInterceptor handlerInterceptor;
     protected final SessionManager sessionManager;
-    protected final SessionListener sessionListener;
+    protected final boolean enableUDP;
+    protected final Server server;
+    protected final String name;
 
     private NettyConfig(int readerIdleTime,
                         int writerIdleTime,
                         int allIdleTime,
-                        int port,
-                        int maxFrameLength,
+                        Integer port,
+                        Integer maxFrameLength,
                         LengthField lengthField,
-                        Delimiter[] delimiter,
+                        Delimiter[] delimiters,
                         MessageDecoder decoder,
                         MessageEncoder encoder,
                         HandlerMapping handlerMapping,
                         HandlerInterceptor handlerInterceptor,
                         SessionManager sessionManager,
-                        SessionListener sessionListener
+                        boolean enableUDP,
+                        String name
     ) {
+        ObjectUtil.checkNotNull(port, "port");
+        ObjectUtil.checkPositive(port, "port");
+        ObjectUtil.checkNotNull(decoder, "decoder");
+        ObjectUtil.checkNotNull(encoder, "encoder");
+        ObjectUtil.checkNotNull(handlerMapping, "handlerMapping");
+        ObjectUtil.checkNotNull(handlerInterceptor, "handlerInterceptor");
+        if (!enableUDP) {
+            ObjectUtil.checkNotNull(maxFrameLength, "maxFrameLength");
+            ObjectUtil.checkPositive(maxFrameLength, "maxFrameLength");
+            ObjectUtil.checkNotNull(delimiters, "delimiters");
+        }
+
         this.readerIdleTime = readerIdleTime;
         this.writerIdleTime = writerIdleTime;
         this.allIdleTime = allIdleTime;
         this.port = port;
         this.maxFrameLength = maxFrameLength;
         this.lengthField = lengthField;
-        this.delimiter = delimiter;
+        this.delimiters = delimiters;
         this.decoder = decoder;
         this.encoder = encoder;
         this.handlerMapping = handlerMapping;
         this.handlerInterceptor = handlerInterceptor;
         this.sessionManager = sessionManager;
-        this.sessionListener = sessionListener;
-        this.adapter = new DispatcherHandler(this.handlerMapping, this.handlerInterceptor, this.sessionManager, this.sessionListener);
+        this.enableUDP = enableUDP;
+
+        if (enableUDP) {
+            this.name = name != null ? name : "UDP";
+            this.server = new UDPServer(this);
+        } else {
+            this.name = name != null ? name : "TCP";
+            this.server = new TCPServer(this);
+        }
+    }
+
+    public Server build() {
+        return server;
     }
 
     public static NettyConfig.Builder custom() {
@@ -70,8 +94,8 @@ public class NettyConfig {
         private int readerIdleTime = 240;
         private int writerIdleTime = 0;
         private int allIdleTime = 0;
-        private int port;
-        private int maxFrameLength;
+        private Integer port;
+        private Integer maxFrameLength;
         private LengthField lengthField;
         private Delimiter[] delimiters;
         private MessageDecoder decoder;
@@ -79,7 +103,8 @@ public class NettyConfig {
         private HandlerMapping handlerMapping;
         private HandlerInterceptor handlerInterceptor;
         private SessionManager sessionManager;
-        private SessionListener sessionListener;
+        private boolean enableUDP;
+        private String name;
 
         public Builder() {
         }
@@ -91,12 +116,12 @@ public class NettyConfig {
             return this;
         }
 
-        public Builder setPort(int port) {
+        public Builder setPort(Integer port) {
             this.port = port;
             return this;
         }
 
-        public Builder setMaxFrameLength(int maxFrameLength) {
+        public Builder setMaxFrameLength(Integer maxFrameLength) {
             this.maxFrameLength = maxFrameLength;
             return this;
         }
@@ -145,12 +170,17 @@ public class NettyConfig {
             return this;
         }
 
-        public Builder setSessionListener(SessionListener sessionListener) {
-            this.sessionListener = sessionListener;
+        public Builder setEnableUDP(boolean enableUDP) {
+            this.enableUDP = enableUDP;
             return this;
         }
 
-        public NettyConfig build() {
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Server build() {
             return new NettyConfig(
                     this.readerIdleTime,
                     this.writerIdleTime,
@@ -164,8 +194,9 @@ public class NettyConfig {
                     this.handlerMapping,
                     this.handlerInterceptor,
                     this.sessionManager,
-                    this.sessionListener
-            );
+                    this.enableUDP,
+                    this.name
+            ).build();
         }
     }
 }
