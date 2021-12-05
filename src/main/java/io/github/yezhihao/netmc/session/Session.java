@@ -2,27 +2,30 @@ package io.github.yezhihao.netmc.session;
 
 import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.core.model.Response;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.util.AttributeKey;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 /**
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 public class Session {
 
-    public static final AttributeKey<Session> KEY = AttributeKey.newInstance(Session.class.getName());
-
+    private final boolean udp;
+    private final Function<Session, Boolean> remover;
     protected final Channel channel;
     private final SessionManager sessionManager;
-    private final SessionListener sessionListener;
+    private final InetSocketAddress remoteAddress;
+    private final String remoteAddressStr;
 
     private final long creationTime;
     private long lastAccessedTime;
@@ -33,25 +36,24 @@ public class Session {
     private final AtomicInteger serialNo = new AtomicInteger(0);
 
 
-    private Session(Channel channel, SessionManager sessionManager, SessionListener sessionListener) {
+    public Session(SessionManager sessionManager,
+                   Channel channel,
+                   InetSocketAddress remoteAddress,
+                   Function<Session, Boolean> remover,
+                   boolean udp) {
         this.channel = channel;
         this.creationTime = System.currentTimeMillis();
         this.lastAccessedTime = creationTime;
         this.sessionManager = sessionManager;
-        this.sessionListener = sessionListener;
+        this.remoteAddress = remoteAddress;
+        this.remoteAddressStr = remoteAddress.toString();
+        this.remover = remover;
+        this.udp = udp;
 
         if (sessionManager != null && sessionManager.getSessionKeyClass() != null)
             this.attributes = new EnumMap(sessionManager.getSessionKeyClass());
         else
             this.attributes = new TreeMap<>();
-    }
-
-    public static Session newInstance(Channel channel,
-                                      SessionManager sessionManager,
-                                      SessionListener sessionListener) {
-        Session session = new Session(channel, sessionManager, sessionListener);
-        session.callSessionCreatedListener();
-        return session;
     }
 
     /**
@@ -68,8 +70,6 @@ public class Session {
         this.clientId = message.getClientId();
         if (sessionManager != null)
             sessionManager.add(this);
-        if (sessionListener != null)
-            sessionListener.sessionRegistered(this);
     }
 
     public boolean isRegistered() {
@@ -128,14 +128,8 @@ public class Session {
             sessionManager.setOfflineCache(clientId, value);
     }
 
-    private void callSessionDestroyedListener() {
-        if (sessionListener != null)
-            sessionListener.sessionDestroyed(this);
-    }
-
-    private void callSessionCreatedListener() {
-        if (sessionListener != null)
-            sessionListener.sessionCreated(this);
+    public InetSocketAddress remoteAddress() {
+        return remoteAddress;
     }
 
     public int nextSerialNo() {
@@ -149,21 +143,26 @@ public class Session {
     }
 
     public void invalidate() {
-        channel.close();
-        callSessionDestroyedListener();
+        if (isRegistered() && sessionManager != null)
+            sessionManager.remove(this);
+        remover.apply(this);
+    }
+
+    public boolean isUdp() {
+        return udp;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder(66);
-        sb.append("{sid=").append(sessionId);
-        sb.append(",cid=").append(clientId);
-        sb.append(",ip=").append(channel.remoteAddress());
-        sb.append('}');
+        final StringBuilder sb = new StringBuilder(50);
+        sb.append(remoteAddressStr);
+        sb.append('/').append(sessionId);
+        if (sessionId != clientId)
+            sb.append('/').append(clientId);
         return sb.toString();
     }
 
-    private final Map<String, MonoSink<Message>> topicSubscribers = new HashMap<>();
+    private final Map<String, MonoSink> topicSubscribers = new HashMap<>();
 
     private static final Mono Rejected = Mono.error(new RejectedExecutionException("客户端暂未响应，请勿重复发送"));
 
@@ -172,8 +171,15 @@ public class Session {
      * 同步发送 mono.block()
      * 订阅回调 mono.doOnSuccess({处理成功}).doOnError({处理异常}).subscribe()开始订阅
      */
-    public Mono<Void> notify(Object message) {
-        ChannelFuture channelFuture = channel.writeAndFlush(message);
+    public Mono<Void> notify(Message message) {
+        return mono(channel.writeAndFlush(Packet.of(this, message)));
+    }
+
+    public Mono<Void> notify(ByteBuf message) {
+        return mono(channel.writeAndFlush(Packet.of(this, message)));
+    }
+
+    private static Mono<Void> mono(ChannelFuture channelFuture) {
         Mono<Void> mono = Mono.create(sink -> channelFuture.addListener(future -> {
             if (future.isSuccess()) {
                 sink.success();
@@ -191,20 +197,20 @@ public class Session {
      */
     public <T> Mono<T> request(Message request, Class<T> responseClass) {
         String key = requestKey(request, responseClass);
-        Mono<Message> receive = this.subscribe(key);
+        Mono<T> receive = this.subscribe(key);
         if (receive == null) {
             return Rejected;
         }
 
-        ChannelFuture channelFuture = channel.writeAndFlush(request);
-        Mono<Message> mono = Mono.create(sink -> channelFuture.addListener(future -> {
+        ChannelFuture channelFuture = channel.writeAndFlush(Packet.of(this, request));
+        Mono<T> mono = Mono.create(sink -> channelFuture.addListener(future -> {
             if (future.isSuccess()) {
                 sink.success(future);
             } else {
                 sink.error(future.cause());
             }
         })).then(receive).doFinally(signal -> unsubscribe(key));
-        return (Mono<T>) mono;
+        return mono;
     }
 
     /**
@@ -219,7 +225,7 @@ public class Session {
         return false;
     }
 
-    private Mono<Message> subscribe(String key) {
+    private Mono subscribe(String key) {
         synchronized (topicSubscribers) {
             if (!topicSubscribers.containsKey(key)) return Mono.create(sink -> topicSubscribers.put(key, sink));
         }
@@ -239,7 +245,7 @@ public class Session {
         return className;
     }
 
-    private static String responseKey(Message response) {
+    private static String responseKey(Object response) {
         String className = response.getClass().getName();
         if (response instanceof Response) {
             int serialNo = ((Response) response).getResponseSerialNo();
