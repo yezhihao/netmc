@@ -11,6 +11,14 @@ public class MyMessage implements Message {
 
     private String body;
 
+    public MyMessage() {
+    }
+
+    public MyMessage(MyHeader header, String body) {
+        this.header = header;
+        this.body = body;
+    }
+
     public Session getSession() {
         return session;
     }
@@ -57,9 +65,8 @@ public class MyMessage implements Message {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("MyMessage{");
-        sb.append("session=").append(session);
-        sb.append(", header=").append(header);
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("header=").append(header);
         sb.append(", body='").append(body).append('\'');
         sb.append('}');
         return sb.toString();

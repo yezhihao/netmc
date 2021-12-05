@@ -41,4 +41,14 @@ public class MyHeader {
     public void setSerialNo(int serialNo) {
         this.serialNo = serialNo;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("clientId='").append(clientId).append('\'');
+        sb.append(", type=").append(type);
+        sb.append(", serialNo=").append(serialNo);
+        sb.append('}');
+        return sb.toString();
+    }
 }
