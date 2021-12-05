@@ -1,6 +1,6 @@
 package io.github.yezhihao.netmc.codec;
 
-import io.github.yezhihao.netmc.session.Session;
+import io.github.yezhihao.netmc.session.Packet;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
@@ -12,7 +12,7 @@ import io.netty.handler.codec.EncoderException;
 /**
  * 基础消息编码
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 @ChannelHandler.Sharable
 public class MessageEncoderWrapper extends ChannelOutboundHandlerAdapter {
@@ -25,18 +25,17 @@ public class MessageEncoderWrapper extends ChannelOutboundHandlerAdapter {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
-        ByteBuf buf = null;
+        Packet packet = (Packet) msg;
+        ByteBuf buf = packet.take();
         try {
-            if (msg instanceof ByteBuf)
-                buf = (ByteBuf) msg;
-            else
-                buf = encoder.encode(msg, ctx.channel().attr(Session.KEY).get());
+            if (buf == null)
+                buf = encoder.encode(packet.message, packet.session);
 
             if (buf.isReadable()) {
-                ctx.write(buf, promise);
+                ctx.write(packet.wrap(buf), promise);
             } else {
                 buf.release();
-                ctx.write(Unpooled.EMPTY_BUFFER, promise);
+                ctx.write(packet.wrap(Unpooled.EMPTY_BUFFER), promise);
             }
             buf = null;
         } catch (EncoderException e) {
