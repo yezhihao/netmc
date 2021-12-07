@@ -12,6 +12,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * @author yezhihao
  * https://gitee.com/yezhihao/jt808-server
@@ -25,9 +28,33 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 
     private final HandlerInterceptor interceptor;
 
-    public DispatcherHandler(HandlerMapping handlerMapping, HandlerInterceptor interceptor) {
+//    private final AtomicInteger count = new AtomicInteger();
+
+    public static DispatcherHandler newInstance(HandlerMapping handlerMapping, HandlerInterceptor interceptor, ExecutorService executor) {
+        if (executor == null)
+            return new DispatcherHandler(handlerMapping, interceptor);
+        return new AsyncImpl(handlerMapping, interceptor, executor);
+    }
+
+    private DispatcherHandler(HandlerMapping handlerMapping, HandlerInterceptor interceptor) {
         this.handlerMapping = handlerMapping;
         this.interceptor = interceptor;
+//        long start = System.currentTimeMillis();
+//        Thread t = new Thread(() -> {
+//            while (true) {
+//                try {
+//                    Thread.sleep(2000L);
+//                } catch (Exception e) {
+//                }
+//                int num = count.get();
+//                long time = (System.currentTimeMillis() - start) / 1000;
+//                log.error(time + "\t" + num + "\t" + num / time);
+//            }
+//        });
+//        t.setName(Thread.currentThread().getName() + "-c");
+//        t.setPriority(Thread.MIN_PRIORITY);
+//        t.setDaemon(true);
+//        t.start();
     }
 
     @Override
@@ -36,6 +63,7 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
+//        count.addAndGet(1);
         Session session = packet.session;
         Message request = packet.message;
         Message response;
@@ -65,5 +93,20 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
             log.info("====={},处理耗时{}ms,", request.getMessageName(), time);
         if (response != null)
             ctx.writeAndFlush(packet.replace(response));
+    }
+
+    private static class AsyncImpl extends DispatcherHandler {
+
+        private final ExecutorService executor;
+
+        private AsyncImpl(HandlerMapping handlerMapping, HandlerInterceptor interceptor, ExecutorService executor) {
+            super(handlerMapping, interceptor);
+            this.executor = executor;
+        }
+
+        @Override
+        public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            executor.execute(() -> channelRead0(ctx, (Packet) msg));
+        }
     }
 }

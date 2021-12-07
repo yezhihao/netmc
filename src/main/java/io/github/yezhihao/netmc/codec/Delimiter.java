@@ -1,8 +1,8 @@
 package io.github.yezhihao.netmc.codec;
 
 public class Delimiter {
-    protected byte[] value;
-    protected boolean strip;
+    public final byte[] value;
+    public final boolean strip;
 
     public Delimiter(byte[] value) {
         this(value, true);

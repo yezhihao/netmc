@@ -22,10 +22,11 @@ public class TCPStressTest {
     public static void main(String[] args) throws Exception {
         Socket[] clients = new Socket[size];
         for (int i = 0; i < size; i++) {
-            clients[i] = new Socket("127.0.0.1", 7711);
+            clients[i] = new Socket("127.0.0.1", 7611);
         }
+
         long start = System.currentTimeMillis();
-        new Thread(() -> {
+        Thread t = new Thread(() -> {
             while (true) {
                 try {
                     Thread.sleep(2000L);
@@ -35,7 +36,11 @@ public class TCPStressTest {
                 long time = (System.currentTimeMillis() - start) / 1000;
                 System.out.println(time + "\t" + num + "\t" + num / time);
             }
-        }).start();
+        });
+        t.setName(Thread.currentThread().getName() + "-c");
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.setDaemon(true);
+        t.start();
 
         while (true) {
             for (int i = 0; i < size; i++) {
