@@ -14,10 +14,14 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.NettyRuntime;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author yezhihao
@@ -30,6 +34,7 @@ public class TCPServer implements Server {
     private final NettyConfig config;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
+    private ExecutorService businessGroup;
 
     protected TCPServer(NettyConfig config) {
         this.config = config;
@@ -41,9 +46,17 @@ public class TCPServer implements Server {
         return new LengthFieldAndDelimiterFrameDecoder(config.maxFrameLength, config.lengthField, config.delimiters);
     }
 
+    private DispatcherHandler dispatcherHandler() {
+        if (businessGroup == null)
+            return new DispatcherHandler(config.handlerMapping, config.handlerInterceptor);
+        return new AsyncDispatcherHandler(config.handlerMapping, config.handlerInterceptor, businessGroup);
+    }
+
     private boolean startInternal() {
         bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory(config.name, Thread.MAX_PRIORITY));
-        workerGroup = new NioEventLoopGroup(NettyRuntime.availableProcessors(), new DefaultThreadFactory(config.name, Thread.MAX_PRIORITY));
+        workerGroup = new NioEventLoopGroup(config.workerCore, new DefaultThreadFactory(config.name, Thread.MAX_PRIORITY));
+        if (config.businessCore > 0)
+            businessGroup = new ThreadPoolExecutor(config.businessCore, config.businessCore, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new DefaultThreadFactory(config.name + "-B", true, Thread.NORM_PRIORITY));
         ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
@@ -55,7 +68,7 @@ public class TCPServer implements Server {
                     private final TCPMessageAdapter adapter = new TCPMessageAdapter(config.sessionManager);
                     private final MessageDecoderWrapper decoder = new MessageDecoderWrapper(config.decoder);
                     private final MessageEncoderWrapper encoder = new MessageEncoderWrapper(config.encoder);
-                    private final DispatcherHandler dispatcher = new DispatcherHandler(config.handlerMapping, config.handlerInterceptor);
+                    private final DispatcherHandler dispatcher = dispatcherHandler();
 
                     @Override
                     public void initChannel(NioSocketChannel channel) {
@@ -92,6 +105,8 @@ public class TCPServer implements Server {
         isRunning = false;
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
+        if (businessGroup != null)
+            businessGroup.shutdown();
         log.warn("==={}已经停止,port:{}===", config.name, config.port);
     }
 }

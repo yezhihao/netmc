@@ -7,6 +7,7 @@ import io.github.yezhihao.netmc.codec.MessageEncoder;
 import io.github.yezhihao.netmc.core.HandlerInterceptor;
 import io.github.yezhihao.netmc.core.HandlerMapping;
 import io.github.yezhihao.netmc.session.SessionManager;
+import io.netty.util.NettyRuntime;
 import io.netty.util.internal.ObjectUtil;
 
 /**
@@ -15,6 +16,8 @@ import io.netty.util.internal.ObjectUtil;
  */
 public class NettyConfig {
 
+    protected final int workerCore;
+    protected final int businessCore;
     protected final int readerIdleTime;
     protected final int writerIdleTime;
     protected final int allIdleTime;
@@ -31,7 +34,9 @@ public class NettyConfig {
     protected final Server server;
     protected final String name;
 
-    private NettyConfig(int readerIdleTime,
+    private NettyConfig(int workerGroup,
+                        int businessGroup,
+                        int readerIdleTime,
                         int writerIdleTime,
                         int allIdleTime,
                         Integer port,
@@ -58,6 +63,8 @@ public class NettyConfig {
             ObjectUtil.checkNotNull(delimiters, "delimiters");
         }
 
+        this.workerCore = workerGroup > 0 ? workerGroup : NettyRuntime.availableProcessors();
+        this.businessCore = businessGroup;
         this.readerIdleTime = readerIdleTime;
         this.writerIdleTime = writerIdleTime;
         this.allIdleTime = allIdleTime;
@@ -91,6 +98,8 @@ public class NettyConfig {
 
     public static class Builder {
 
+        private int workerCore;
+        private int businessCore;
         private int readerIdleTime = 240;
         private int writerIdleTime = 0;
         private int allIdleTime = 0;
@@ -107,6 +116,12 @@ public class NettyConfig {
         private String name;
 
         public Builder() {
+        }
+
+        public Builder setThreadGroup(int workerCore, int businessCore) {
+            this.workerCore = workerCore;
+            this.businessCore = businessCore;
+            return this;
         }
 
         public Builder setIdleStateTime(int readerIdleTime, int writerIdleTime, int allIdleTime) {
@@ -182,6 +197,8 @@ public class NettyConfig {
 
         public Server build() {
             return new NettyConfig(
+                    this.workerCore,
+                    this.businessCore,
                     this.readerIdleTime,
                     this.writerIdleTime,
                     this.allIdleTime,

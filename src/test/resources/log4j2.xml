@@ -3,12 +3,12 @@
 
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%t] %-5p%-21c{3}[%L]%msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5p%-21c{3}[%L]%msg%n"/>
         </Console>
     </Appenders>
 
     <Loggers>
-        <Root level="info">
+        <Root level="warn">
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>

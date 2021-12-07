@@ -3,6 +3,8 @@ package io.github.yezhihao.netmc.session;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.netty.channel.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -16,6 +18,8 @@ import java.util.function.Function;
  * https://gitee.com/yezhihao/jt808-server
  */
 public class SessionManager {
+
+    private static final Logger log = LoggerFactory.getLogger(SessionManager.class);
 
     private final Map<String, Session> sessionMap;
 
@@ -55,27 +59,43 @@ public class SessionManager {
             return true;
         }, false);
         if (sessionListener != null)
-            sessionListener.sessionCreated(session);
+            try {
+                sessionListener.sessionCreated(session);
+            } catch (Exception e) {
+                log.error("sessionCreated", e);
+            }
         return session;
     }
 
     public Session newInstance(Channel channel, InetSocketAddress sender, Function<Session, Boolean> remover) {
         Session session = new Session(this, channel, sender, remover, true);
         if (sessionListener != null)
-            sessionListener.sessionCreated(session);
+            try {
+                sessionListener.sessionCreated(session);
+            } catch (Exception e) {
+                log.error("sessionCreated", e);
+            }
         return session;
     }
 
     protected void remove(Session session) {
         boolean remove = sessionMap.remove(session.getId(), session);
         if (remove && sessionListener != null)
-            sessionListener.sessionDestroyed(session);
+            try {
+                sessionListener.sessionDestroyed(session);
+            } catch (Exception e) {
+                log.error("sessionDestroyed", e);
+            }
     }
 
     protected void add(Session newSession) {
         Session oldSession = sessionMap.put(newSession.getId(), newSession);
         if (sessionListener != null)
-            sessionListener.sessionRegistered(newSession);
+            try {
+                sessionListener.sessionRegistered(newSession);
+            } catch (Exception e) {
+                log.error("sessionRegistered", e);
+            }
     }
 
     public void setOfflineCache(String clientId, Object value) {

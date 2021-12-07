@@ -14,6 +14,11 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author yezhihao
  * https://gitee.com/yezhihao/jt808-server
@@ -23,18 +28,28 @@ public class UDPServer implements Server {
     private static final Logger log = LoggerFactory.getLogger(UDPServer.class);
     private boolean isRunning;
     private final NettyConfig config;
-    private EventLoopGroup workerGroup;
+    private EventLoopGroup bossGroup;
+    private ExecutorService businessGroup;
 
     protected UDPServer(NettyConfig config) {
         this.config = config;
     }
 
+    private DispatcherHandler dispatcherHandler() {
+        if (businessGroup == null)
+            return new DispatcherHandler(config.handlerMapping, config.handlerInterceptor);
+        return new AsyncDispatcherHandler(config.handlerMapping, config.handlerInterceptor, businessGroup);
+    }
+
     private boolean startInternal() {
-        workerGroup = new NioEventLoopGroup(new DefaultThreadFactory(config.name, Thread.MAX_PRIORITY));
+        bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory(config.name, Thread.MAX_PRIORITY));
+        if (config.businessCore > 0)
+            businessGroup = new ThreadPoolExecutor(config.businessCore, config.businessCore, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new DefaultThreadFactory(config.name + "-B", true, Thread.NORM_PRIORITY));
         Bootstrap bootstrap = new Bootstrap()
-                .group(workerGroup)
+                .group(bossGroup)
                 .channel(NioDatagramChannel.class)
                 .option(NioChannelOption.SO_REUSEADDR, true)
+                .option(NioChannelOption.SO_RCVBUF, 1024 * 1024 * 50)
                 .handler(new ChannelInitializer<NioDatagramChannel>() {
 
                     private final UDPMessageAdapter adapter = config.delimiters == null ?
@@ -42,7 +57,7 @@ public class UDPServer implements Server {
                             new UDPDelimiterBasedFrameDecoder(config.sessionManager, config.readerIdleTime, config.delimiters);
                     private final MessageDecoderWrapper decoder = new MessageDecoderWrapper(config.decoder);
                     private final MessageEncoderWrapper encoder = new MessageEncoderWrapper(config.encoder);
-                    private final DispatcherHandler dispatcher = new DispatcherHandler(config.handlerMapping, config.handlerInterceptor);
+                    private final DispatcherHandler dispatcher = dispatcherHandler();
 
                     @Override
                     public void initChannel(NioDatagramChannel channel) {
@@ -75,7 +90,9 @@ public class UDPServer implements Server {
 
     public synchronized void stop() {
         isRunning = false;
-        workerGroup.shutdownGracefully();
+        bossGroup.shutdownGracefully();
+        if (businessGroup != null)
+            businessGroup.shutdown();
         log.warn("==={}已经停止,port:{}===", config.name, config.port);
     }
 }

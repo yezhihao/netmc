@@ -17,6 +17,7 @@ public class QuickStart {
     public static void main(String[] args) {
         Server udpServer = new NettyConfig.Builder()
                 .setPort(7611)
+//                .setThreadGroup(0, 2)
                 .setDelimiters(new byte[][]{"|".getBytes(StandardCharsets.UTF_8)})
                 .setDecoder(new MyMessageDecoder())
                 .setEncoder(new MyMessageEncoder())
@@ -28,8 +29,8 @@ public class QuickStart {
         udpServer.start();
 
         Server tcpServer = new NettyConfig.Builder()
-                .setPort(7611)
-                .setMaxFrameLength(1024)
+                .setPort(7711)
+                .setMaxFrameLength(2048)
                 .setDelimiters(new byte[][]{"|".getBytes(StandardCharsets.UTF_8)})
                 .setDecoder(new MyMessageDecoder())
                 .setEncoder(new MyMessageEncoder())

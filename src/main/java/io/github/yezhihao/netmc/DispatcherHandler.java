@@ -32,7 +32,10 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        Packet packet = (Packet) msg;
+        channelRead0(ctx, (Packet) msg);
+    }
+
+    protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
         Session session = packet.session;
         Message request = packet.message;
         Message response;
