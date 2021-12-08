@@ -57,7 +57,6 @@ public class NettyConfig {
         ObjectUtil.checkNotNull(encoder, "encoder");
         ObjectUtil.checkNotNull(handlerMapping, "handlerMapping");
         ObjectUtil.checkNotNull(handlerInterceptor, "handlerInterceptor");
-        ObjectUtil.checkNotNull(sessionManager, "sessionManager");
         if (!enableUDP) {
             ObjectUtil.checkNotNull(maxFrameLength, "maxFrameLength");
             ObjectUtil.checkPositive(maxFrameLength, "maxFrameLength");
@@ -77,7 +76,7 @@ public class NettyConfig {
         this.encoder = encoder;
         this.handlerMapping = handlerMapping;
         this.handlerInterceptor = handlerInterceptor;
-        this.sessionManager = sessionManager;
+        this.sessionManager = sessionManager != null ? sessionManager : new SessionManager();
         this.enableUDP = enableUDP;
 
         if (enableUDP) {

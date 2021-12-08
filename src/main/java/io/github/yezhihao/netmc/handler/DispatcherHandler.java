@@ -1,4 +1,4 @@
-package io.github.yezhihao.netmc;
+package io.github.yezhihao.netmc.handler;
 
 import io.github.yezhihao.netmc.core.HandlerInterceptor;
 import io.github.yezhihao.netmc.core.HandlerMapping;

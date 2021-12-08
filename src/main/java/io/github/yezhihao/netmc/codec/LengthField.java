@@ -8,13 +8,13 @@ import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
  * https://gitee.com/yezhihao/jt808-server
  */
 public class LengthField {
-    protected final byte[] prefix;
-    protected final int lengthFieldMaxFrameLength;
-    protected final int lengthFieldOffset;
-    protected final int lengthFieldLength;
-    protected final int lengthFieldEndOffset;
-    protected final int lengthAdjustment;
-    protected final int initialBytesToStrip;
+    public final byte[] prefix;
+    public final int lengthFieldMaxFrameLength;
+    public final int lengthFieldOffset;
+    public final int lengthFieldLength;
+    public final int lengthFieldEndOffset;
+    public final int lengthAdjustment;
+    public final int initialBytesToStrip;
 
     public LengthField(byte[] prefix, int maxFrameLength, int lengthFieldOffset, int lengthFieldLength) {
         this(prefix, maxFrameLength, lengthFieldOffset, lengthFieldLength, 0, 0);

@@ -1,5 +1,6 @@
-package io.github.yezhihao.netmc.codec;
+package io.github.yezhihao.netmc.handler;
 
+import io.github.yezhihao.netmc.codec.MessageEncoder;
 import io.github.yezhihao.netmc.session.Packet;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

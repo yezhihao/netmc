@@ -1,4 +1,4 @@
-package io.github.yezhihao.netmc;
+package io.github.yezhihao.netmc.handler;
 
 import io.github.yezhihao.netmc.session.Packet;
 import io.github.yezhihao.netmc.session.Session;
