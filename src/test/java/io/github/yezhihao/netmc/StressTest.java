@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets;
 /**
  * 压力测试
  * 模拟1200台设备，每100毫秒上报一次位置信息
+ * @author yezhihao
+ * https://gitee.com/yezhihao/jt808-server
  */
 public class StressTest {
 

@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 public class SpringHandlerMapping extends AbstractHandlerMapping implements ApplicationContextAware {
 

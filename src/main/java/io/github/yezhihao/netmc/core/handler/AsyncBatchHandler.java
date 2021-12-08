@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 异步批量处理
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 public class AsyncBatchHandler extends Handler {
 

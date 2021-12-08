@@ -9,6 +9,10 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.function.BiFunction;
 
+/**
+ * @author yezhihao
+ * https://gitee.com/yezhihao/jt808-server
+ */
 public interface Client extends Closeable {
 
     void send(byte[] bytes) throws IOException;

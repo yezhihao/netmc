@@ -7,7 +7,7 @@ import java.util.function.Function;
 
 /**
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 public final class AdapterMap<K, S, T> extends AbstractMap<K, T> {
 

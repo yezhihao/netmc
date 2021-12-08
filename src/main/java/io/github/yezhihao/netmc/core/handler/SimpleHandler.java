@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 /**
  * 同步处理
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 public class SimpleHandler extends Handler {
 

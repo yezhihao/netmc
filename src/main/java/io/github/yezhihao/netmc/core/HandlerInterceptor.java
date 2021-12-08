@@ -6,7 +6,7 @@ import io.github.yezhihao.netmc.session.Session;
 /**
  * 消息拦截器
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 public interface HandlerInterceptor<T extends Message> {
     /** @return Response 未找到对应的Handle */

@@ -6,6 +6,10 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 
+/**
+ * @author yezhihao
+ * https://gitee.com/yezhihao/jt808-server
+ */
 public class MonoTest {
 
     private static final Logger log = LoggerFactory.getLogger(Session.class.getSimpleName());

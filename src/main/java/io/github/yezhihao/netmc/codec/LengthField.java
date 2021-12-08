@@ -3,6 +3,10 @@ package io.github.yezhihao.netmc.codec;
 import static io.netty.util.internal.ObjectUtil.checkPositive;
 import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
 
+/**
+ * @author yezhihao
+ * https://gitee.com/yezhihao/jt808-server
+ */
 public class LengthField {
     protected final byte[] prefix;
     protected final int lengthFieldMaxFrameLength;

@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 
 /**
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 @SuppressWarnings("unchecked")
 public abstract class Handler {

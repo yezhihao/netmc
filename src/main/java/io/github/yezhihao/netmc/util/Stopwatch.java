@@ -2,6 +2,10 @@ package io.github.yezhihao.netmc.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * @author yezhihao
+ * https://gitee.com/yezhihao/jt808-server
+ */
 public class Stopwatch {
 
     private final AtomicInteger count = new AtomicInteger();

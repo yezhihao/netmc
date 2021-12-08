@@ -1,16 +1,20 @@
 package io.github.yezhihao.netmc.codec;
 
+import io.github.yezhihao.netmc.util.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.util.internal.ObjectUtil;
-import io.github.yezhihao.netmc.util.ByteBufUtils;
 
 import java.util.List;
 
 import static io.netty.util.internal.ObjectUtil.checkPositive;
 
+/**
+ * @author yezhihao
+ * https://gitee.com/yezhihao/jt808-server
+ */
 public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
 
     private final Delimiter[] delimiters;

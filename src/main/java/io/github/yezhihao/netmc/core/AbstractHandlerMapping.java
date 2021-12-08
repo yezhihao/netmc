@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * 消息处理映射
  * @author yezhihao
- * home https://gitee.com/yezhihao/jt808-server
+ * https://gitee.com/yezhihao/jt808-server
  */
 public abstract class AbstractHandlerMapping implements HandlerMapping {
 

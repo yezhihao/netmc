@@ -1,5 +1,9 @@
 package io.github.yezhihao.netmc.codec;
 
+/**
+ * @author yezhihao
+ * https://gitee.com/yezhihao/jt808-server
+ */
 public class Delimiter {
     public final byte[] value;
     public final boolean strip;
