@@ -12,11 +12,11 @@ import java.util.List;
 public class DefaultHandlerMapping extends AbstractHandlerMapping {
 
     public DefaultHandlerMapping(String endpointPackage) {
-        List<Class<?>> endpointClasses = ClassUtils.getClassList(endpointPackage, Endpoint.class);
+        List<Class> endpointClasses = ClassUtils.getClassList(endpointPackage, Endpoint.class);
 
-        for (Class<?> endpointClass : endpointClasses) {
+        for (Class endpointClass : endpointClasses) {
             try {
-                Object bean = endpointClass.getDeclaredConstructor((Class<?>[]) null).newInstance((Object[]) null);
+                Object bean = endpointClass.getDeclaredConstructor((Class[]) null).newInstance((Object[]) null);
                 super.registerHandlers(bean);
             } catch (Exception e) {
                 throw new RuntimeException(e);

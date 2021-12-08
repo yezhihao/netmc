@@ -57,6 +57,7 @@ public class NettyConfig {
         ObjectUtil.checkNotNull(encoder, "encoder");
         ObjectUtil.checkNotNull(handlerMapping, "handlerMapping");
         ObjectUtil.checkNotNull(handlerInterceptor, "handlerInterceptor");
+        ObjectUtil.checkNotNull(sessionManager, "sessionManager");
         if (!enableUDP) {
             ObjectUtil.checkNotNull(maxFrameLength, "maxFrameLength");
             ObjectUtil.checkPositive(maxFrameLength, "maxFrameLength");

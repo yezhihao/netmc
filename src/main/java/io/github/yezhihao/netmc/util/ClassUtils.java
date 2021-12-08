@@ -1,8 +1,5 @@
 package io.github.yezhihao.netmc.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.net.JarURLConnection;
@@ -19,16 +16,14 @@ import java.util.jar.JarFile;
  */
 public class ClassUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(ClassUtils.class.getSimpleName());
-
-    public static List<Class<?>> getClassList(String packageName, Class<? extends Annotation> annotationClass) {
-        List<Class<?>> classList = getClassList(packageName);
+    public static List<Class> getClassList(String packageName, Class<? extends Annotation> annotationClass) {
+        List<Class> classList = getClassList(packageName);
         classList.removeIf(next -> !next.isAnnotationPresent(annotationClass));
         return classList;
     }
 
-    public static List<Class<?>> getClassList(String packageName) {
-        List<Class<?>> classList = new LinkedList<>();
+    public static List<Class> getClassList(String packageName) {
+        List<Class> classList = new LinkedList<>();
         String path = packageName.replace(".", "/");
         try {
             Enumeration<URL> urls = ClassUtils.getClassLoader().getResources(path);
@@ -60,12 +55,12 @@ public class ClassUtils {
                 }
             }
         } catch (Exception e) {
-            log.error("获取类出错！", e);
+            throw new RuntimeException("Initial class error!");
         }
         return classList;
     }
 
-    private static void addClass(List<Class<?>> classList, String packagePath, String packageName) {
+    private static void addClass(List<Class> classList, String packagePath, String packageName) {
         try {
             File[] files = new File(packagePath).listFiles(file -> (file.isDirectory() || file.getName().endsWith(".class")));
             if (files != null)
@@ -94,11 +89,11 @@ public class ClassUtils {
         }
     }
 
-    private static void addClass(List<Class<?>> classList, String className) {
+    private static void addClass(List<Class> classList, String className) {
         classList.add(loadClass(className, false));
     }
 
-    public static Class<?> loadClass(String className, boolean isInitialized) {
+    public static Class loadClass(String className, boolean isInitialized) {
         try {
             return Class.forName(className, isInitialized, getClassLoader());
         } catch (ClassNotFoundException e) {

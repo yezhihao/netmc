@@ -6,6 +6,7 @@ import io.github.yezhihao.netmc.core.handler.Handler;
 import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.session.Packet;
 import io.github.yezhihao.netmc.session.Session;
+import io.github.yezhihao.netmc.util.Stopwatch;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -13,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author yezhihao
@@ -28,9 +28,13 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 
     private final HandlerInterceptor interceptor;
 
-//    private final AtomicInteger count = new AtomicInteger();
+    public static boolean STOPWATCH = false;
+
+    private static Stopwatch s;
 
     public static DispatcherHandler newInstance(HandlerMapping handlerMapping, HandlerInterceptor interceptor, ExecutorService executor) {
+        if (STOPWATCH && s == null)
+            s = new Stopwatch().start();
         if (executor == null)
             return new DispatcherHandler(handlerMapping, interceptor);
         return new AsyncImpl(handlerMapping, interceptor, executor);
@@ -39,31 +43,16 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
     private DispatcherHandler(HandlerMapping handlerMapping, HandlerInterceptor interceptor) {
         this.handlerMapping = handlerMapping;
         this.interceptor = interceptor;
-//        long start = System.currentTimeMillis();
-//        Thread t = new Thread(() -> {
-//            while (true) {
-//                try {
-//                    Thread.sleep(2000L);
-//                } catch (Exception e) {
-//                }
-//                int num = count.get();
-//                long time = (System.currentTimeMillis() - start) / 1000;
-//                log.error(time + "\t" + num + "\t" + num / time);
-//            }
-//        });
-//        t.setName(Thread.currentThread().getName() + "-c");
-//        t.setPriority(Thread.MIN_PRIORITY);
-//        t.setDaemon(true);
-//        t.start();
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+    public final void channelRead(ChannelHandlerContext ctx, Object msg) {
+        if (STOPWATCH)
+            s.increment();
         channelRead0(ctx, (Packet) msg);
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
-//        count.addAndGet(1);
         Session session = packet.session;
         Message request = packet.message;
         Message response;
@@ -105,8 +94,8 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
         }
 
         @Override
-        public void channelRead(ChannelHandlerContext ctx, Object msg) {
-            executor.execute(() -> channelRead0(ctx, (Packet) msg));
+        public void channelRead0(ChannelHandlerContext ctx, Packet msg) {
+            executor.execute(() -> super.channelRead0(ctx, msg));
         }
     }
 }

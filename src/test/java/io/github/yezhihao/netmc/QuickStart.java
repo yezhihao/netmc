@@ -14,9 +14,13 @@ import java.nio.charset.StandardCharsets;
  */
 public class QuickStart {
 
+    public static final int port = 7611;
+
     public static void main(String[] args) {
+        DispatcherHandler.STOPWATCH = true;
+
         Server udpServer = new NettyConfig.Builder()
-                .setPort(7611)
+                .setPort(port)
 //                .setThreadGroup(0, 1)
                 .setDelimiters(new byte[][]{"|".getBytes(StandardCharsets.UTF_8)})
                 .setDecoder(new MyMessageDecoder())
@@ -29,7 +33,7 @@ public class QuickStart {
         udpServer.start();
 
         Server tcpServer = new NettyConfig.Builder()
-                .setPort(7611)
+                .setPort(port)
                 .setMaxFrameLength(2048)
                 .setDelimiters(new byte[][]{"|".getBytes(StandardCharsets.UTF_8)})
                 .setDecoder(new MyMessageDecoder())
