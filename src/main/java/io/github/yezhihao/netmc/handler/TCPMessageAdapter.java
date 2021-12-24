@@ -24,7 +24,7 @@ import java.io.IOException;
 @ChannelHandler.Sharable
 public class TCPMessageAdapter extends ChannelInboundHandlerAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(TCPMessageAdapter.class.getSimpleName());
+    private static final Logger log = LoggerFactory.getLogger(TCPMessageAdapter.class);
 
     private static final AttributeKey<Session> KEY = AttributeKey.newInstance(Session.class.getName());
 

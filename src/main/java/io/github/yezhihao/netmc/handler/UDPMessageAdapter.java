@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @ChannelHandler.Sharable
 public class UDPMessageAdapter extends ChannelInboundHandlerAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(UDPMessageAdapter.class.getSimpleName());
+    private static final Logger log = LoggerFactory.getLogger(UDPMessageAdapter.class);
 
     private final SessionManager sessionManager;
 

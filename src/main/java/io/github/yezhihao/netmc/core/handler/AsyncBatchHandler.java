@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class AsyncBatchHandler extends Handler {
 
-    private static final Logger log = LoggerFactory.getLogger(AsyncBatchHandler.class.getSimpleName());
+    private static final Logger log = LoggerFactory.getLogger(AsyncBatchHandler.class);
 
     private final ConcurrentLinkedQueue<Message> queue;
 

@@ -4,6 +4,7 @@ import io.github.yezhihao.netmc.codec.MyMessageDecoder;
 import io.github.yezhihao.netmc.codec.MyMessageEncoder;
 import io.github.yezhihao.netmc.core.DefaultHandlerMapping;
 import io.github.yezhihao.netmc.endpoint.MyHandlerInterceptor;
+import io.github.yezhihao.netmc.handler.DispatcherHandler;
 import io.github.yezhihao.netmc.session.SessionManager;
 
 import java.nio.charset.StandardCharsets;

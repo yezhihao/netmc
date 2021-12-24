@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutorService;
 @ChannelHandler.Sharable
 public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(DispatcherHandler.class.getSimpleName());
+    private static final Logger log = LoggerFactory.getLogger(DispatcherHandler.class);
 
     private final HandlerMapping handlerMapping;
 

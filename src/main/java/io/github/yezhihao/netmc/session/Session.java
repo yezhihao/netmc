@@ -148,6 +148,10 @@ public class Session {
         remover.apply(this);
     }
 
+    public String getRemoteAddressStr() {
+        return remoteAddressStr;
+    }
+
     public boolean isUdp() {
         return udp;
     }
