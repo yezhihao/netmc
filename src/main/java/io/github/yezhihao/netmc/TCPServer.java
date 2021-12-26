@@ -1,11 +1,6 @@
 package io.github.yezhihao.netmc;
 
-import io.github.yezhihao.netmc.handler.DelimiterBasedFrameDecoder;
-import io.github.yezhihao.netmc.handler.LengthFieldAndDelimiterFrameDecoder;
-import io.github.yezhihao.netmc.handler.MessageDecoderWrapper;
-import io.github.yezhihao.netmc.handler.MessageEncoderWrapper;
-import io.github.yezhihao.netmc.handler.DispatcherHandler;
-import io.github.yezhihao.netmc.handler.TCPMessageAdapter;
+import io.github.yezhihao.netmc.handler.*;
 import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -31,7 +26,7 @@ public class TCPServer extends Server {
         super(config);
     }
 
-    protected AbstractBootstrap startInternal() {
+    protected AbstractBootstrap initialize() {
         bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory(config.name, Thread.MAX_PRIORITY));
         workerGroup = new NioEventLoopGroup(config.workerCore, new DefaultThreadFactory(config.name, Thread.MAX_PRIORITY));
         if (config.businessCore > 0)
@@ -47,7 +42,7 @@ public class TCPServer extends Server {
                     private final TCPMessageAdapter adapter = new TCPMessageAdapter(config.sessionManager);
                     private final MessageDecoderWrapper decoder = new MessageDecoderWrapper(config.decoder);
                     private final MessageEncoderWrapper encoder = new MessageEncoderWrapper(config.encoder);
-                    private final DispatcherHandler dispatcher = DispatcherHandler.newInstance(config.handlerMapping, config.handlerInterceptor, businessGroup);
+                    private final DispatcherHandler dispatcher = new DispatcherHandler(config.handlerMapping, config.handlerInterceptor, businessGroup);
 
                     @Override
                     public void initChannel(NioSocketChannel channel) {

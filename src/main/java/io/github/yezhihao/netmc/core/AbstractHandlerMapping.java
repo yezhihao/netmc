@@ -1,5 +1,6 @@
 package io.github.yezhihao.netmc.core;
 
+import io.github.yezhihao.netmc.core.annotation.Async;
 import io.github.yezhihao.netmc.core.annotation.AsyncBatch;
 import io.github.yezhihao.netmc.core.annotation.Mapping;
 import io.github.yezhihao.netmc.core.handler.AsyncBatchHandler;
@@ -41,7 +42,7 @@ public abstract class AbstractHandlerMapping implements HandlerMapping {
                     handler = new AsyncBatchHandler(bean, method, desc, asyncBatch.poolSize(), asyncBatch.maxElements(), asyncBatch.maxWait());
 
                 } else {
-                    handler = new SimpleHandler(bean, method, desc);
+                    handler = new SimpleHandler(bean, method, desc, method.isAnnotationPresent(Async.class));
                 }
 
                 for (int type : types) {

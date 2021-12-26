@@ -28,74 +28,67 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
 
     private final HandlerInterceptor interceptor;
 
+    private final ExecutorService executor;
+
     public static boolean STOPWATCH = false;
 
     private static Stopwatch s;
 
-    public static DispatcherHandler newInstance(HandlerMapping handlerMapping, HandlerInterceptor interceptor, ExecutorService executor) {
+    public DispatcherHandler(HandlerMapping handlerMapping, HandlerInterceptor interceptor, ExecutorService executor) {
         if (STOPWATCH && s == null)
             s = new Stopwatch().start();
-        if (executor == null)
-            return new DispatcherHandler(handlerMapping, interceptor);
-        return new AsyncImpl(handlerMapping, interceptor, executor);
-    }
-
-    private DispatcherHandler(HandlerMapping handlerMapping, HandlerInterceptor interceptor) {
         this.handlerMapping = handlerMapping;
         this.interceptor = interceptor;
+        this.executor = executor;
     }
 
     @Override
     public final void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (STOPWATCH)
             s.increment();
-        channelRead0(ctx, (Packet) msg);
+
+        Packet packet = (Packet) msg;
+        Message request = packet.message;
+        Handler handler = handlerMapping.getHandler(request.getMessageId());
+
+        if (handler == null) {
+            Message response = interceptor.notSupported(request, packet.session);
+            if (response != null) {
+                ctx.writeAndFlush(packet.replace(response));
+            }
+        } else {
+            if (handler.async) {
+                executor.execute(() -> channelRead0(ctx, packet, handler));
+            } else {
+                channelRead0(ctx, packet, handler);
+            }
+        }
     }
 
-    protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
+    private void channelRead0(ChannelHandlerContext ctx, Packet packet, Handler handler) {
         Session session = packet.session;
         Message request = packet.message;
         Message response;
-        long time = session.access();
+        long time = System.currentTimeMillis();
 
         try {
-            Handler handler = handlerMapping.getHandler(request.getMessageId());
-            if (handler != null) {
-                if (!interceptor.beforeHandle(request, session))
-                    return;
+            if (!interceptor.beforeHandle(request, session))
+                return;
 
-                response = handler.invoke(request, session);
-                if (handler.returnVoid) {
-                    response = interceptor.successful(request, session);
-                } else {
-                    interceptor.afterHandle(request, response, session);
-                }
+            response = handler.invoke(request, session);
+            if (handler.returnVoid) {
+                response = interceptor.successful(request, session);
             } else {
-                response = interceptor.notSupported(request, session);
+                interceptor.afterHandle(request, response, session);
             }
         } catch (Exception e) {
             log.warn(String.valueOf(request), e);
             response = interceptor.exceptional(request, session, e);
         }
         time = System.currentTimeMillis() - time;
-        if (time > 200)
-            log.info("====={},处理耗时{}ms,", request.getMessageName(), time);
+        if (time > 100)
+            log.info("====={},慢处理耗时{}ms", handler, time);
         if (response != null)
             ctx.writeAndFlush(packet.replace(response));
-    }
-
-    private static class AsyncImpl extends DispatcherHandler {
-
-        private final ExecutorService executor;
-
-        private AsyncImpl(HandlerMapping handlerMapping, HandlerInterceptor interceptor, ExecutorService executor) {
-            super(handlerMapping, interceptor);
-            this.executor = executor;
-        }
-
-        @Override
-        public void channelRead0(ChannelHandlerContext ctx, Packet msg) {
-            executor.execute(() -> super.channelRead0(ctx, msg));
-        }
     }
 }

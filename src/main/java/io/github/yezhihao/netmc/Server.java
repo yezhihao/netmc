@@ -25,7 +25,7 @@ public abstract class Server {
         this.config = config;
     }
 
-    protected abstract AbstractBootstrap startInternal();
+    protected abstract AbstractBootstrap initialize();
 
     public synchronized boolean start() {
         if (isRunning) {
@@ -33,7 +33,7 @@ public abstract class Server {
             return isRunning;
         }
 
-        AbstractBootstrap bootstrap = startInternal();
+        AbstractBootstrap bootstrap = initialize();
         ChannelFuture future = bootstrap.bind(config.port).awaitUninterruptibly();
         future.channel().closeFuture().addListener(f -> {
             if (isRunning) stop();

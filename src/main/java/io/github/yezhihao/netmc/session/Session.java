@@ -5,6 +5,8 @@ import io.github.yezhihao.netmc.core.model.Response;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 
@@ -19,6 +21,8 @@ import java.util.function.Function;
  * https://gitee.com/yezhihao/jt808-server
  */
 public class Session {
+
+    private static final Logger log = LoggerFactory.getLogger(Session.class);
 
     private final boolean udp;
     private final Function<Session, Boolean> remover;
@@ -70,6 +74,7 @@ public class Session {
         this.clientId = message.getClientId();
         if (sessionManager != null)
             sessionManager.add(this);
+        log.info("<<<<<终端注册{}", this);
     }
 
     public boolean isRegistered() {

@@ -3,7 +3,7 @@ package io.github.yezhihao.netmc.core.annotation;
 import java.lang.annotation.*;
 
 /**
- * 异步批处理消息注解
+ * 异步消息批量处理，该注解的用户代码将运行在独立的线程组
  * @author yezhihao
  * https://gitee.com/yezhihao/jt808-server
  */

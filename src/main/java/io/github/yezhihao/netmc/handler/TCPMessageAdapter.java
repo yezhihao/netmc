@@ -38,6 +38,7 @@ public class TCPMessageAdapter extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ByteBuf buf = (ByteBuf) msg;
         Session session = getSession(ctx);
+        session.access();
         ctx.fireChannelRead(Packet.of(session, buf));
     }
 

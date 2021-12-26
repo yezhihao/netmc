@@ -21,12 +21,20 @@ public abstract class Handler {
     public final Method targetMethod;
     public final int[] parameterTypes;
     public final boolean returnVoid;
+    public final boolean async;
     public final String desc;
 
     public Handler(Object targetObject, Method targetMethod, String desc) {
+        this(targetObject, targetMethod, desc, false);
+    }
+
+    public Handler(Object targetObject, Method targetMethod, String desc, boolean async) {
         this.targetObject = targetObject;
         this.targetMethod = targetMethod;
         this.returnVoid = targetMethod.getReturnType().isAssignableFrom(Void.TYPE);
+        this.async = async;
+        if (desc == null || desc.isEmpty())
+            desc = targetMethod.getName();
         this.desc = desc;
 
         Type[] types = targetMethod.getGenericParameterTypes();

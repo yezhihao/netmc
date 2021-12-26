@@ -63,8 +63,9 @@ public class NettyConfig {
             ObjectUtil.checkNotNull(delimiters, "delimiters");
         }
 
-        this.workerCore = workerGroup > 0 ? workerGroup : NettyRuntime.availableProcessors();
-        this.businessCore = businessGroup;
+        int processors = NettyRuntime.availableProcessors();
+        this.workerCore = workerGroup > 0 ? workerGroup : processors + 2;
+        this.businessCore = businessGroup > 0 ? businessGroup : Math.max(1, processors >> 2);
         this.readerIdleTime = readerIdleTime;
         this.writerIdleTime = writerIdleTime;
         this.allIdleTime = allIdleTime;

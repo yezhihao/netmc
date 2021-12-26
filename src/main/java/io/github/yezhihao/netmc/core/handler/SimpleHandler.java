@@ -12,8 +12,8 @@ import java.lang.reflect.Method;
  */
 public class SimpleHandler extends Handler {
 
-    public SimpleHandler(Object actionClass, Method actionMethod, String desc) {
-        super(actionClass, actionMethod, desc);
+    public SimpleHandler(Object actionClass, Method actionMethod, String desc, boolean async) {
+        super(actionClass, actionMethod, desc, async);
     }
 
     public <T extends Message> T invoke(T request, Session session) throws Exception {
