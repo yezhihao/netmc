@@ -9,6 +9,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.EncoderException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 基础消息编码
@@ -17,6 +19,8 @@ import io.netty.handler.codec.EncoderException;
  */
 @ChannelHandler.Sharable
 public class MessageEncoderWrapper extends ChannelOutboundHandlerAdapter {
+
+    private static final Logger log = LoggerFactory.getLogger(MessageEncoderWrapper.class);
 
     private final MessageEncoder encoder;
 
@@ -27,25 +31,27 @@ public class MessageEncoderWrapper extends ChannelOutboundHandlerAdapter {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
         Packet packet = (Packet) msg;
-        ByteBuf buf = packet.take();
+        ByteBuf output = packet.take();
         try {
-            if (buf == null)
-                buf = encoder.encode(packet.message, packet.session);
+            if (output == null)
+                output = encoder.encode(packet.message, packet.session);
 
-            if (buf.isReadable()) {
-                ctx.write(packet.wrap(buf), promise);
+            if (output.isReadable()) {
+                ctx.write(packet.wrap(output), promise);
             } else {
-                buf.release();
+                output.release();
                 ctx.write(packet.wrap(Unpooled.EMPTY_BUFFER), promise);
             }
-            buf = null;
+            output = null;
         } catch (EncoderException e) {
+            log.error("消息编码异常" + packet.message, e);
             throw e;
         } catch (Throwable e) {
+            log.error("消息编码异常" + packet.message, e);
             throw new EncoderException(e);
         } finally {
-            if (buf != null) {
-                buf.release();
+            if (output != null) {
+                output.release();
             }
         }
     }

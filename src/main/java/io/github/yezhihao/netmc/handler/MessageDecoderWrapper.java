@@ -9,6 +9,8 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.DecoderException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 基础消息解码
@@ -17,6 +19,8 @@ import io.netty.handler.codec.DecoderException;
  */
 @ChannelHandler.Sharable
 public class MessageDecoderWrapper extends ChannelInboundHandlerAdapter {
+
+    private static final Logger log = LoggerFactory.getLogger(MessageDecoderWrapper.class);
 
     private final MessageDecoder decoder;
 
@@ -27,16 +31,17 @@ public class MessageDecoderWrapper extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Packet packet = (Packet) msg;
-        ByteBuf buf = packet.take();
+        ByteBuf input = packet.take();
         try {
-            Message message = decoder.decode(buf, packet.session);
+            Message message = decoder.decode(input, packet.session);
             if (message != null)
                 ctx.fireChannelRead(packet.replace(message));
-            buf.skipBytes(buf.readableBytes());
+            input.skipBytes(input.readableBytes());
         } catch (Exception e) {
-            throw new DecoderException(ByteBufUtil.hexDump(buf), e);
+            log.error("消息解码异常[" + ByteBufUtil.hexDump(input, 0, input.writerIndex()) + "]", e);
+            throw new DecoderException(e);
         } finally {
-            buf.release();
+            input.release();
         }
     }
 }
