@@ -29,7 +29,7 @@ public class MonoTest {
                 }
             }).start();
             sink.onDispose(() -> System.out.println("release a"));
-        }).then(Mono.<Integer>create(sink -> {
+        }).then(Mono.create(sink -> {
             log.warn("connect b");
             new Thread(() -> {
                 log.warn("receive b");

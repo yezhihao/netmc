@@ -87,7 +87,7 @@ public interface Client extends Closeable {
         public void close() {
             try {
                 client.close();
-            } catch (IOException e) {
+            } catch (IOException ignored) {
             }
         }
     };

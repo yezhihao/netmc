@@ -30,13 +30,13 @@ public class Stopwatch {
                 }
                 try {
                     Thread.sleep(1L);
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
             }
             while (true) {
                 try {
                     Thread.sleep(2000L);
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
                 int num = count.get();
                 long time = (System.currentTimeMillis() - start) / 1000;

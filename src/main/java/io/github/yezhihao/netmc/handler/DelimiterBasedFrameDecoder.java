@@ -38,7 +38,7 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         Object decoded = decode(ctx, in);
         if (decoded != null) {
             out.add(decoded);

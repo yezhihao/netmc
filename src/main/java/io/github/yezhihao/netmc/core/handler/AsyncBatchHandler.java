@@ -49,7 +49,7 @@ public class AsyncBatchHandler extends Handler {
         this.maxWait = maxWait;
         this.warningLines = maxElements * poolSize * 50;
 
-        this.queue = new ConcurrentLinkedQueue();
+        this.queue = new ConcurrentLinkedQueue<>();
         this.executor = new ThreadPoolExecutor(this.poolSize, this.poolSize, 1000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(400), new DefaultThreadFactory(actionMethod.getName(), true, Thread.NORM_PRIORITY));
 
         for (int i = 0; i < poolSize; i++) {
@@ -100,7 +100,7 @@ public class AsyncBatchHandler extends Handler {
                     for (int j = 0; j < i; j++)
                         array[j] = null;
                     Thread.sleep(maxWait);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException ignored) {
                 }
             } else if (master) {
                 if (logtime < starttime) {

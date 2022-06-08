@@ -18,8 +18,8 @@ public class MyMessageDecoder implements MessageDecoder {
 
         MyHeader header = new MyHeader();
         header.setClientId(headStr[0]);
-        header.setType(Integer.valueOf(headStr[1]));
-        header.setSerialNo(Integer.valueOf(headStr[2]));
+        header.setType(Integer.parseInt(headStr[1]));
+        header.setSerialNo(Integer.parseInt(headStr[2]));
 
         MyMessage message = new MyMessage();
         message.setHeader(header);
