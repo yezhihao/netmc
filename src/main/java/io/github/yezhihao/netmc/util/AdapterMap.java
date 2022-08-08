@@ -16,7 +16,7 @@ public final class AdapterMap<K, S, T> extends AbstractMap<K, T> {
 
     public AdapterMap(Map<K, S> src, Function<S, T> function) {
         this.src = src;
-        this.entries = new AdapterSet(src.entrySet(), (Function<Entry<K, S>, Entry<K, T>>) e -> new SimpleEntry(e.getKey(), function.apply(e.getValue())));
+        this.entries = new AdapterSet<>(src.entrySet(), entry -> new SimpleEntry<>(entry.getKey(), function.apply(entry.getValue())));
     }
 
     @Override

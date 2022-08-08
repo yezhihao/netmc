@@ -4,7 +4,6 @@ import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.core.model.Response;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -166,7 +165,7 @@ public class Session {
         final StringBuilder sb = new StringBuilder(50);
         sb.append(remoteAddressStr);
         sb.append('/').append(sessionId);
-        if (sessionId != clientId)
+        if (!Objects.equals(sessionId, clientId))
             sb.append('/').append(clientId);
         return sb.toString();
     }
@@ -181,22 +180,25 @@ public class Session {
      * 订阅回调 mono.doOnSuccess({处理成功}).doOnError({处理异常}).subscribe()开始订阅
      */
     public Mono<Void> notify(Message message) {
-        return mono(channel.writeAndFlush(Packet.of(this, message)));
-    }
-
-    public Mono<Void> notify(ByteBuf message) {
-        return mono(channel.writeAndFlush(Packet.of(this, message)));
-    }
-
-    private static Mono<Void> mono(ChannelFuture channelFuture) {
-        Mono<Void> mono = Mono.create(sink -> channelFuture.addListener(future -> {
+        Packet packet = Packet.of(this, message);
+        return Mono.create(sink -> channel.writeAndFlush(packet).addListener(future -> {
             if (future.isSuccess()) {
                 sink.success();
             } else {
                 sink.error(future.cause());
             }
         }));
-        return mono;
+    }
+
+    public Mono<Void> notify(ByteBuf message) {
+        Packet packet = Packet.of(this, message);
+        return Mono.create(sink -> channel.writeAndFlush(packet).addListener(future -> {
+            if (future.isSuccess()) {
+                sink.success();
+            } else {
+                sink.error(future.cause());
+            }
+        }));
     }
 
     /**
@@ -211,15 +213,14 @@ public class Session {
             return Rejected;
         }
 
-        ChannelFuture channelFuture = channel.writeAndFlush(Packet.of(this, request));
-        Mono<T> mono = Mono.create(sink -> channelFuture.addListener(future -> {
+        Packet packet = Packet.of(this, request);
+        return Mono.create(sink -> channel.writeAndFlush(packet).addListener(future -> {
             if (future.isSuccess()) {
                 sink.success(future);
             } else {
                 sink.error(future.cause());
             }
         })).then(receive).doFinally(signal -> unsubscribe(key));
-        return mono;
     }
 
     /**
