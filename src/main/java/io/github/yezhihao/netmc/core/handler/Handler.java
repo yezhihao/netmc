@@ -2,16 +2,15 @@ package io.github.yezhihao.netmc.core.handler;
 
 import io.github.yezhihao.netmc.core.model.Message;
 import io.github.yezhihao.netmc.session.Session;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
  * @author yezhihao
  * https://gitee.com/yezhihao/jt808-server
  */
-@SuppressWarnings("unchecked")
 public abstract class Handler {
 
     public static final int MESSAGE = 0;
@@ -43,8 +42,8 @@ public abstract class Handler {
             for (int i = 0; i < types.length; i++) {
                 Type type = types[i];
                 Class<?> clazz;
-                if (type instanceof ParameterizedTypeImpl)
-                    clazz = (Class<?>) ((ParameterizedTypeImpl) type).getActualTypeArguments()[0];
+                if (type instanceof ParameterizedType)
+                    clazz = (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
                 else
                     clazz = (Class<?>) type;
 
