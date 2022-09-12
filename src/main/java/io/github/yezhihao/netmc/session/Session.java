@@ -13,7 +13,9 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.IntUnaryOperator;
 
 /**
  * @author yezhihao
@@ -37,7 +39,10 @@ public class Session {
     private String sessionId;
     private String clientId;
     private final AtomicInteger serialNo = new AtomicInteger(0);
-
+    private BiConsumer<Session, Message> requestInterceptor = (session, message) -> {
+    };
+    private BiConsumer<Session, Message> responseInterceptor = (session, message) -> {
+    };
 
     public Session(SessionManager sessionManager,
                    Channel channel,
@@ -136,14 +141,20 @@ public class Session {
         return remoteAddress;
     }
 
+    public void requestInterceptor(BiConsumer<Session, Message> requestInterceptor) {
+        if (requestInterceptor != null)
+            this.requestInterceptor = requestInterceptor;
+    }
+
+    public void responseInterceptor(BiConsumer<Session, Message> responseInterceptor) {
+        if (responseInterceptor != null)
+            this.responseInterceptor = responseInterceptor;
+    }
+
+    private static final IntUnaryOperator UNARY_OPERATOR = prev -> prev >= 0xFFFF ? 0 : prev + 1;
+
     public int nextSerialNo() {
-        int current;
-        int next;
-        do {
-            current = serialNo.get();
-            next = current > 0xffff ? 0 : current;
-        } while (!serialNo.compareAndSet(current, next + 1));
-        return next;
+        return serialNo.getAndUpdate(UNARY_OPERATOR);
     }
 
     public void invalidate() {
@@ -180,6 +191,7 @@ public class Session {
      * 订阅回调 mono.doOnSuccess({处理成功}).doOnError({处理异常}).subscribe()开始订阅
      */
     public Mono<Void> notify(Message message) {
+        requestInterceptor.accept(this, message);
         Packet packet = Packet.of(this, message);
         return Mono.create(sink -> channel.writeAndFlush(packet).addListener(future -> {
             if (future.isSuccess()) {
@@ -207,6 +219,7 @@ public class Session {
      * 订阅回调 mono.doOnSuccess({处理成功}).doOnError({处理异常}).subscribe()开始订阅
      */
     public <T> Mono<T> request(Message request, Class<T> responseClass) {
+        requestInterceptor.accept(this, request);
         String key = requestKey(request, responseClass);
         Mono<T> receive = this.subscribe(key);
         if (receive == null) {
@@ -227,6 +240,7 @@ public class Session {
      * 消息响应
      */
     public boolean response(Message message) {
+        responseInterceptor.accept(this, message);
         MonoSink<Message> sink = topicSubscribers.get(responseKey(message));
         if (sink != null) {
             sink.success(message);
