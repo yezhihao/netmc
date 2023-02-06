@@ -10,9 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 异步批量处理
@@ -25,7 +24,7 @@ public class AsyncBatchHandler extends Handler {
 
     private final ConcurrentLinkedQueue<Message> queue;
 
-    private final ThreadPoolExecutor executor;
+    private final ExecutorService executor;
 
     private final int poolSize;
 
@@ -50,7 +49,7 @@ public class AsyncBatchHandler extends Handler {
         this.warningLines = maxElements * poolSize * 50;
 
         this.queue = new ConcurrentLinkedQueue<>();
-        this.executor = new ThreadPoolExecutor(this.poolSize, this.poolSize, 1000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(400), new DefaultThreadFactory(actionMethod.getName(), true, Thread.NORM_PRIORITY));
+        this.executor = Executors.newFixedThreadPool(this.poolSize, new DefaultThreadFactory(actionMethod.getName(), true, Thread.NORM_PRIORITY));
 
         for (int i = 0; i < poolSize; i++) {
             boolean master = i == 0;
