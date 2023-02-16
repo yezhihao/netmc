@@ -60,7 +60,9 @@ public class NettyConfig {
         if (!enableUDP) {
             ObjectUtil.checkNotNull(maxFrameLength, "maxFrameLength");
             ObjectUtil.checkPositive(maxFrameLength, "maxFrameLength");
-            ObjectUtil.checkNotNull(delimiters, "delimiters");
+            if (delimiters == null && lengthField == null) {
+                throw new IllegalArgumentException("At least one of delimiters and lengthField is not empty");
+            }
         }
 
         int processors = NettyRuntime.availableProcessors();

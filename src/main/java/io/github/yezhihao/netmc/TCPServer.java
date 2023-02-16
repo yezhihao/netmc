@@ -9,6 +9,7 @@ import io.netty.channel.socket.nio.NioChannelOption;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
@@ -58,8 +59,15 @@ public class TCPServer extends Server {
     }
 
     private ByteToMessageDecoder frameDecoder() {
-        if (config.lengthField == null)
-            return new DelimiterBasedFrameDecoder(config.maxFrameLength, config.delimiters);
-        return new LengthFieldAndDelimiterFrameDecoder(config.maxFrameLength, config.lengthField, config.delimiters);
+        if (config.lengthField != null) {
+            if (config.delimiters != null) {
+                return new LengthFieldAndDelimiterFrameDecoder(config.maxFrameLength, config.lengthField, config.delimiters);
+            } else {
+                return new LengthFieldBasedFrameDecoder(config.maxFrameLength,
+                        config.lengthField.lengthFieldOffset, config.lengthField.lengthFieldLength,
+                        config.lengthField.lengthAdjustment, config.lengthField.initialBytesToStrip);
+            }
+        }
+        return new DelimiterBasedFrameDecoder(config.maxFrameLength, config.delimiters);
     }
 }
