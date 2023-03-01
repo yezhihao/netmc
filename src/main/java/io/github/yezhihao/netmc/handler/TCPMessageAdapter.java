@@ -8,7 +8,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
@@ -54,7 +53,7 @@ public class TCPMessageAdapter extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        log.info("<<<<<终端连接{}", ctx.channel().remoteAddress());
+        log.info("<<<<< Connected{}", ctx.channel().remoteAddress());
     }
 
     @Override
@@ -62,7 +61,7 @@ public class TCPMessageAdapter extends ChannelInboundHandlerAdapter {
         Session session = ctx.channel().attr(KEY).get();
         if (session != null)
             session.invalidate();
-        log.info(">>>>>断开连接{}", client(ctx));
+        log.info(">>>>> Disconnected{}", client(ctx));
     }
 
     @Override
@@ -77,11 +76,8 @@ public class TCPMessageAdapter extends ChannelInboundHandlerAdapter {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
-            IdleState state = event.state();
-            if (state == IdleState.READER_IDLE || state == IdleState.WRITER_IDLE || state == IdleState.ALL_IDLE) {
-                log.warn(">>>>>终端心跳超时{} {}", state, client(ctx));
-                ctx.close();
-            }
+            log.warn(">>>>>终端心跳超时{} {}", event.state(), client(ctx));
+            ctx.close();
         }
     }
 

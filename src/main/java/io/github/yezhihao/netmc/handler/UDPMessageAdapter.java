@@ -62,7 +62,7 @@ public class UDPMessageAdapter extends ChannelInboundHandlerAdapter {
         if (session == null) {
             session = sessionManager.newInstance(ctx.channel(), sender, s -> sessionMap.remove(sender, s));
             sessionMap.put(sender, session);
-            log.info("<<<<<终端连接{}", session);
+            log.info("<<<<< Connected{}", session);
         }
         return session;
     }

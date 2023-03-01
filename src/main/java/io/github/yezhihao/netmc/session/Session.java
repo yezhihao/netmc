@@ -78,7 +78,7 @@ public class Session {
         this.clientId = message.getClientId();
         if (sessionManager != null)
             sessionManager.add(this);
-        log.info("<<<<<终端注册{}", this);
+        log.info("<<<<< Registered{}", this);
     }
 
     public boolean isRegistered() {
