@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * UDP消息适配器
@@ -55,13 +56,14 @@ public class UDPMessageAdapter extends ChannelInboundHandlerAdapter {
         ctx.fireChannelRead(Packet.of(session, buf));
     }
 
-    private final Map<Object, Session> sessionMap = new ConcurrentHashMap<>();
+    private final Map<InetSocketAddress, Session> sessionMap = new ConcurrentHashMap<>();
+
+    private final Function<Session, Boolean> sessionRemover = session -> sessionMap.remove(session.remoteAddress(), session);
 
     protected Session getSession(ChannelHandlerContext ctx, InetSocketAddress sender) {
         Session session = sessionMap.get(sender);
         if (session == null) {
-            session = sessionManager.newInstance(ctx.channel(), sender, s -> sessionMap.remove(sender, s));
-            sessionMap.put(sender, session);
+            session = sessionMap.computeIfAbsent(sender, _sender -> sessionManager.newInstance(ctx.channel(), _sender, sessionRemover));
             log.info("<<<<< Connected{}", session);
         }
         return session;

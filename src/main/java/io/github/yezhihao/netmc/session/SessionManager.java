@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -21,7 +20,7 @@ public class SessionManager {
 
     private static final Logger log = LoggerFactory.getLogger(SessionManager.class);
 
-    private final Map<String, Session> sessionMap;
+    private final ConcurrentHashMap<String, Session> sessionMap;
 
     private final Cache<String, Object> offlineCache;
 
@@ -48,7 +47,12 @@ public class SessionManager {
         return sessionMap.get(sessionId);
     }
 
+    @Deprecated
     public Collection<Session> all() {
+        return values();
+    }
+
+    public Collection<Session> values() {
         return sessionMap.values();
     }
 
