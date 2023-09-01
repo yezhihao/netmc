@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -96,8 +97,7 @@ public class AsyncBatchHandler extends Handler {
 
             if (i < maxElements) {
                 try {
-                    for (int j = 0; j < i; j++)
-                        array[j] = null;
+                    Arrays.fill(array, null);
                     Thread.sleep(maxWait);
                 } catch (InterruptedException ignored) {
                 }
