@@ -114,8 +114,8 @@ public class Session {
         return attributes;
     }
 
-    public Object getAttribute(Object name) {
-        return attributes.get(name);
+    public <T> T getAttribute(Object name) {
+        return (T) attributes.get(name);
     }
 
     public void setAttribute(Object name, Object value) {
