@@ -42,7 +42,7 @@ public class MyHandlerInterceptor implements HandlerInterceptor<MyMessage> {
 
     /** 调用之后抛出异常的 */
     @Override
-    public MyMessage exceptional(MyMessage request, Session session, Exception ex) {
+    public MyMessage exceptional(MyMessage request, Session session, Throwable ex) {
         log.warn(">>>>>>>>>>消息处理异常{},{}", session, request);
 
         MyHeader header = request.getHeader();

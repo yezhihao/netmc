@@ -22,5 +22,5 @@ public interface HandlerInterceptor<T extends Message> {
     void afterHandle(T request, T response, Session session);
 
     /** @return Response 调用之后抛出异常的 */
-    T exceptional(T request, Session session, Exception e);
+    T exceptional(T request, Session session, Throwable e);
 }

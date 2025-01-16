@@ -13,6 +13,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -81,6 +82,9 @@ public class DispatcherHandler extends ChannelInboundHandlerAdapter {
             } else {
                 interceptor.afterHandle(request, response, session);
             }
+        } catch (InvocationTargetException e) {
+            log.warn(String.valueOf(request), e.getTargetException());
+            response = interceptor.exceptional(request, session, e.getTargetException());
         } catch (Exception e) {
             log.warn(String.valueOf(request), e);
             response = interceptor.exceptional(request, session, e);

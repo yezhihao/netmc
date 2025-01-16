@@ -7,6 +7,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -87,8 +88,10 @@ public class AsyncBatchHandler extends Handler {
                 starttime = System.currentTimeMillis();
                 try {
                     targetMethod.invoke(targetObject, new VirtualList<>(array, i));
+                } catch (InvocationTargetException e) {
+                    log.error(targetMethod.getName(), e.getTargetException());
                 } catch (Exception e) {
-                    log.warn(targetMethod.getName(), e);
+                    log.error(targetMethod.getName(), e);
                 }
                 long time = System.currentTimeMillis() - starttime;
                 if (time > 1000L)
