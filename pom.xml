@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.yezhihao</groupId>
     <artifactId>netmc</artifactId>
-    <version>4.0.1</version>
+    <version>4.0.2</version>
     <packaging>jar</packaging>
 
     <name>Netmc</name>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
-            <version>4.1.114.Final</version>
+            <version>4.1.117.Final</version>
         </dependency>
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
@@ -71,12 +71,12 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
-            <version>3.6.11</version>
+            <version>3.6.13</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>6.1.14</version>
+            <version>6.1.16</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
