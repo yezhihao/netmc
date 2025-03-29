@@ -113,6 +113,7 @@ public class UDPMessageAdapter extends ChannelInboundHandlerAdapter {
             DatagramPacket packet = (DatagramPacket) msg;
             ByteBuf buf = packet.content();
             Session session = getSession(ctx, packet.sender());
+            session.access();
 
             try {
                 List<ByteBuf> out = decode(buf);
