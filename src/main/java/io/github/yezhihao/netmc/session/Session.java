@@ -10,8 +10,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -181,10 +182,6 @@ public class Session {
         return sb.toString();
     }
 
-    private final Map<String, MonoSink> topicSubscribers = new HashMap<>();
-
-    private static final Mono Rejected = Mono.error(new RejectedExecutionException("客户端暂未响应，请勿重复发送"));
-
     /**
      * 异步发送通知类消息
      * 同步发送 mono.block()
@@ -213,27 +210,30 @@ public class Session {
         }));
     }
 
+    private final Map<String, MonoSink> subscribers = new ConcurrentHashMap<>();
+
     /**
-     * 异步发送消息，接收响应
+     * 异步发送消息，接收响应（默认超时时间30秒）
      * 同步接收 mono.block()
      * 订阅回调 mono.doOnSuccess({处理成功}).doOnError({处理异常}).subscribe()开始订阅
      */
     public <T> Mono<T> request(Message request, Class<T> responseClass) {
-        requestInterceptor.accept(this, request);
         String key = requestKey(request, responseClass);
-        Mono<T> receive = this.subscribe(key);
-        if (receive == null) {
-            return Rejected;
-        }
-
-        Packet packet = Packet.of(this, request);
-        return Mono.create(sink -> channel.writeAndFlush(packet).addListener(future -> {
-            if (future.isSuccess()) {
-                sink.success(future);
+        return Mono.<T>create(sink -> {
+            if (subscribers.putIfAbsent(key, sink) != null) {
+                sink.error(new IllegalStateException("等待应答中，请勿重复发送"));
             } else {
-                sink.error(future.cause());
+                sink.onDispose(() -> subscribers.remove(key, sink));
+                requestInterceptor.accept(this, request);
+                Packet packet = Packet.of(this, request);
+
+                channel.writeAndFlush(packet).addListener(future -> {
+                    if (!future.isSuccess()) {
+                        sink.error(future.cause());
+                    }
+                });
             }
-        })).then(receive).doFinally(signal -> unsubscribe(key));
+        }).timeout(Duration.ofSeconds(30L));
     }
 
     /**
@@ -241,7 +241,7 @@ public class Session {
      */
     public boolean response(Message message) {
         responseInterceptor.accept(this, message);
-        MonoSink<Message> sink = topicSubscribers.get(responseKey(message));
+        MonoSink<Message> sink = subscribers.get(responseKey(message));
         if (sink != null) {
             sink.success(message);
             return true;
@@ -249,31 +249,18 @@ public class Session {
         return false;
     }
 
-    private Mono subscribe(String key) {
-        synchronized (topicSubscribers) {
-            if (!topicSubscribers.containsKey(key)) return Mono.create(sink -> topicSubscribers.put(key, sink));
-        }
-        return null;
-    }
-
-    private void unsubscribe(String key) {
-        topicSubscribers.remove(key);
-    }
-
-    private static String requestKey(Message request, Class responseClass) {
+    private static String requestKey(Message request, Class<?> responseClass) {
         String className = responseClass.getName();
         if (Response.class.isAssignableFrom(responseClass)) {
-            int serialNo = request.getSerialNo();
-            return new StringBuilder(34).append(className).append('.').append(serialNo).toString();
+            return className + '.' + request.getSerialNo();
         }
         return className;
     }
 
     private static String responseKey(Object response) {
         String className = response.getClass().getName();
-        if (response instanceof Response) {
-            int serialNo = ((Response) response).getResponseSerialNo();
-            return new StringBuilder(34).append(className).append('.').append(serialNo).toString();
+        if (response instanceof Response resp) {
+            return className + '.' + resp.getResponseSerialNo();
         }
         return className;
     }
