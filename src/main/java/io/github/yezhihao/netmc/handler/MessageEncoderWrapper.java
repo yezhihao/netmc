@@ -44,10 +44,10 @@ public class MessageEncoderWrapper extends ChannelOutboundHandlerAdapter {
             }
             output = null;
         } catch (EncoderException e) {
-            log.error("消息编码异常" + packet.message, e);
+            log.error("消息编码异常{}", packet.message, e);
             throw e;
         } catch (Throwable e) {
-            log.error("消息编码异常" + packet.message, e);
+            log.error("消息编码异常{}", packet.message, e);
             throw new EncoderException(e);
         } finally {
             if (output != null) {

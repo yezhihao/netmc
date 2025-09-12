@@ -69,7 +69,7 @@ public class TCPMessageAdapter extends ChannelInboundHandlerAdapter {
         if (e instanceof IOException)
             log.warn("<<<<<终端断开连接{} {}", client(ctx), e.getMessage());
         else
-            log.warn(">>>>>消息处理异常" + client(ctx), e);
+            log.warn(">>>>>消息处理异常{}", client(ctx), e);
     }
 
     @Override

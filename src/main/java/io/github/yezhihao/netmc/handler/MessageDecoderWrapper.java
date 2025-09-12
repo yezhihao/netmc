@@ -32,16 +32,19 @@ public class MessageDecoderWrapper extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Packet packet = (Packet) msg;
         ByteBuf input = packet.take();
+        if (input == null) return;
         try {
             Message message = decoder.decode(input, packet.session);
             if (message != null)
                 ctx.fireChannelRead(packet.replace(message));
             input.skipBytes(input.readableBytes());
         } catch (Exception e) {
-            log.error("消息解码异常[" + ByteBufUtil.hexDump(input, 0, input.writerIndex()) + "]", e);
+            log.error("消息解码异常[{}]", ByteBufUtil.hexDump(input, 0, input.writerIndex()), e);
             throw new DecoderException(e);
         } finally {
-            input.release();
+            if (input.refCnt() > 0) {
+                input.release();
+            }
         }
     }
 }
