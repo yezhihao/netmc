@@ -218,13 +218,13 @@ public class Session {
      * 订阅回调 mono.doOnSuccess({处理成功}).doOnError({处理异常}).subscribe()开始订阅
      */
     public <T> Mono<T> request(Message request, Class<T> responseClass) {
+        requestInterceptor.accept(this, request);
         String key = requestKey(request, responseClass);
         return Mono.<T>create(sink -> {
             if (subscribers.putIfAbsent(key, sink) != null) {
                 sink.error(new IllegalStateException("等待应答中，请勿重复发送"));
             } else {
                 sink.onDispose(() -> subscribers.remove(key, sink));
-                requestInterceptor.accept(this, request);
                 Packet packet = Packet.of(this, request);
 
                 channel.writeAndFlush(packet).addListener(future -> {
