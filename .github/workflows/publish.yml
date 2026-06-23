@@ -1,0 +1,91 @@
+name: Publish to Maven Central
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maven-central-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish release
+    runs-on: ubuntu-latest
+
+    environment: maven-central
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java and Maven publishing
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
+      - name: Read project version
+        id: project
+        shell: bash
+        run: |
+          VERSION="$(
+            mvn help:evaluate \
+              -Dexpression=project.version \
+              -q \
+              -DforceStdout
+          )"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Project version: $VERSION"
+
+      - name: Validate release version
+        shell: bash
+        run: |
+          VERSION="${{ steps.project.outputs.version }}"
+
+          if [[ "$VERSION" == *"-SNAPSHOT" ]]; then
+            echo "Release version cannot end with -SNAPSHOT"
+            exit 1
+          fi
+
+      - name: Validate tag matches project version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PROJECT_VERSION="${{ steps.project.outputs.version }}"
+
+          echo "Tag version: $TAG_VERSION"
+          echo "POM version: $PROJECT_VERSION"
+
+          if [[ "$TAG_VERSION" != "$PROJECT_VERSION" ]]; then
+            echo "Tag and pom.xml version do not match"
+            exit 1
+          fi
+
+      - name: Build, test, sign and publish
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+        run: |
+          mvn \
+            --batch-mode \
+            --no-transfer-progress \
+            clean deploy
