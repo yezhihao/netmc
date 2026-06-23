@@ -10,7 +10,7 @@ Thumbs.db
 
 # Build Artifacts
 
-.git*
+.git/
 .gradle/
 build/
 target/
